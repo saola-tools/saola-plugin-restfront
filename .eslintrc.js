@@ -2,7 +2,14 @@ module.exports = {
   "env": {
     "node": true
   },
-  "extends": "standard",
+  "extends": [
+    "promise",
+    "standard",
+    "eslint:recommended",
+    "plugin:node/recommended",
+    "plugin:import/recommended",
+    "plugin:security/recommended"
+  ],
   "rules": {
     "no-undef": "error",
     "no-unused-vars": "error",

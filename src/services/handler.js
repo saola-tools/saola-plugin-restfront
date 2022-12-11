@@ -80,7 +80,7 @@ function Handler (params = {}) {
     });
     return router;
   };
-};
+}
 
 Handler.referenceHash = {
   errorManager: "app-errorlist/manager",

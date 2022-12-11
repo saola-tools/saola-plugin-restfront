@@ -57,7 +57,7 @@ function Service (params = {}) {
     layerware.push(webweaverService.getDefaultRedirectLayer(['/$', contextPath + '$']));
     webweaverService.push(layerware, pluginCfg.priority);
   }
-};
+}
 
 Service.referenceHash = {
   restfrontHandler: 'handler',
