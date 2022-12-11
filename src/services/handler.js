@@ -1,13 +1,13 @@
-'use strict';
+"use strict";
 
-const Devebot = require('devebot');
-const Promise = Devebot.require('bluebird');
-const chores = Devebot.require('chores');
-const lodash = Devebot.require('lodash');
-const Validator = require('schema-validator');
-const path = require('path');
+const Devebot = require("devebot");
+const Promise = Devebot.require("bluebird");
+const chores = Devebot.require("chores");
+const lodash = Devebot.require("lodash");
+const Validator = require("schema-validator");
+const path = require("path");
 
-const { isPureObject, parseUserAgent } = require('../utils');
+const { isPureObject, parseUserAgent } = require("../utils");
 
 function Handler (params = {}) {
   const { loggingFactory, packageName, sandboxConfig } = params;
@@ -19,8 +19,8 @@ function Handler (params = {}) {
 
   const mappings = joinMappings(mappingHash);
 
-  const swaggerBuilder = sandboxRegistry.lookupService('app-apispec/swaggerBuilder') ||
-      sandboxRegistry.lookupService('app-restguide/swaggerBuilder');
+  const swaggerBuilder = sandboxRegistry.lookupService("app-apispec/swaggerBuilder") ||
+      sandboxRegistry.lookupService("app-restguide/swaggerBuilder");
 
   if (swaggerBuilder) {
     lodash.forOwn(mappingHash, function(mappingBundle, name) {
@@ -30,7 +30,7 @@ function Handler (params = {}) {
     });
   }
 
-  const serviceResolver = sandboxConfig.serviceResolver || 'app-opmaster/commander';
+  const serviceResolver = sandboxConfig.serviceResolver || "app-opmaster/commander";
   const serviceSelector = chores.newServiceSelector({ serviceResolver, sandboxRegistry });
 
   const errorBuilder = errorManager.register(packageName, {
@@ -48,16 +48,16 @@ function Handler (params = {}) {
             return next();
           }
           const requestId = tracelogService.getRequestId(req);
-          const reqTR = T.branch({ key: 'requestId', value: requestId });
-          L.has('info') && L.log('info', reqTR.add({
+          const reqTR = T.branch({ key: "requestId", value: requestId });
+          L.has("info") && L.log("info", reqTR.add({
             mapPath: mapping.path,
             mapMethod: mapping.method,
             url: req.url,
             method: req.method,
             validatorSchema: mapping.validatorSchema
           }).toMessage({
-            text: 'Validate for Req[${requestId}] from [${method}]${url} with schema [${validatorSchema}]'
-          }, 'direct'));
+            text: "Validate for Req[${requestId}] from [${method}]${url} with schema [${validatorSchema}]"
+          }, "direct"));
           let validator = new Validator(mapping.validatorSchema);
           let check = validator.check(req.body);
           if (check._error) {
@@ -108,7 +108,7 @@ function joinMappings (mappingHash, mappings = []) {
 function sanitizeMappings (mappingHash, newMappings = {}) {
   lodash.forOwn(mappingHash, function(mappingList, name) {
     mappingList = mappingList || {};
-    const apiPath = mappingList['apiPath'];
+    const apiPath = mappingList["apiPath"];
     newMappings[name] = newMappings[name] || {};
     // prefix the paths of middlewares by apiPath
     let list = mappingList.apiMaps || mappingList.apimaps || mappingList;
@@ -231,15 +231,15 @@ function buildMiddlewareFromMapping (context, mapping) {
       return next();
     }
     const requestId = tracelogService.getRequestId(req);
-    const reqTR = T.branch({ key: 'requestId', value: requestId });
-    L.has('info') && L.log('info', reqTR.add({
+    const reqTR = T.branch({ key: "requestId", value: requestId });
+    L.has("info") && L.log("info", reqTR.add({
       mapPath: mapping.path,
       mapMethod: mapping.method,
       url: req.url,
       method: req.method
     }).toMessage({
-      text: 'Req[${requestId}] from [${method}]${url}'
-    }, 'direct'));
+      text: "Req[${requestId}] from [${method}]${url}"
+    }, "direct"));
 
     if (!lodash.isFunction(refMethod)) return next();
 
@@ -256,7 +256,7 @@ function buildMiddlewareFromMapping (context, mapping) {
     }, failedReqOpts);
 
     if (failedReqOpts.length > 0) {
-      promize = Promise.reject(errorBuilder.newError('RequestOptionNotFound', {
+      promize = Promise.reject(errorBuilder.newError("RequestOptionNotFound", {
         payload: {
           requestOptions: failedReqOpts
         },
@@ -268,7 +268,7 @@ function buildMiddlewareFromMapping (context, mapping) {
       promize = promize.then(function () {
         return applyValidator(mapping.input.preValidator, {
           errorBuilder: errorBuilder,
-          errorName: 'RequestPreValidationError'
+          errorName: "RequestPreValidationError"
         }, req, reqOpts, services);
       });
     }
@@ -290,7 +290,7 @@ function buildMiddlewareFromMapping (context, mapping) {
       promize = promize.then(function (reqData) {
         return applyValidator(mapping.input.postValidator, {
           errorBuilder: errorBuilder,
-          errorName: 'RequestPostValidationError'
+          errorName: "RequestPostValidationError"
         }, reqData, reqOpts, services);
       });
     }
@@ -321,19 +321,19 @@ function buildMiddlewareFromMapping (context, mapping) {
         }
         // Render the packet
         renderPacketToResponse(packet, res);
-        L.has('trace') && L.log('trace', reqTR.add(packet).toMessage({
-          text: 'Req[${requestId}] is completed'
+        L.has("trace") && L.log("trace", reqTR.add(packet).toMessage({
+          text: "Req[${requestId}] is completed"
         }));
       });
     }
 
     promize = promize.catch(Promise.TimeoutError, function() {
-      L.has('error') && L.log('error', reqTR.add({
+      L.has("error") && L.log("error", reqTR.add({
         timeout: reqOpts.timeout
       }).toMessage({
-        text: 'Req[${requestId}] has timeout after ${timeout} seconds'
+        text: "Req[${requestId}] has timeout after ${timeout} seconds"
       }));
-      return Promise.reject(errorBuilder.newError('RequestTimeoutOnServer', {
+      return Promise.reject(errorBuilder.newError("RequestTimeoutOnServer", {
         payload: {
           timeout: reqOpts.timeout
         },
@@ -341,7 +341,7 @@ function buildMiddlewareFromMapping (context, mapping) {
       }));
     });
 
-    if (chores.isUpgradeSupported('app-restfront-legacy-error-to-response')) {
+    if (chores.isUpgradeSupported("app-restfront-legacy-error-to-response")) {
       promize = promize.catch(function (failed) {
         let packet = {};
         // transform error object to packet
@@ -367,14 +367,14 @@ function buildMiddlewareFromMapping (context, mapping) {
         }
         // Render the packet
         renderPacketToResponse(packet, res.status(packet.statusCode || 500));
-        L.has('error') && L.log('error', reqTR.add(packet).toMessage({
-          text: 'Req[${requestId}] has failed, status[${statusCode}], headers: ${headers}, body: ${body}'
+        L.has("error") && L.log("error", reqTR.add(packet).toMessage({
+          text: "Req[${requestId}] has failed, status[${statusCode}], headers: ${headers}, body: ${body}"
         }));
       });
 
       promize.finally(function () {
-        L.has('silly') && L.log('silly', reqTR.toMessage({
-          text: 'Req[${requestId}] end'
+        L.has("silly") && L.log("silly", reqTR.toMessage({
+          text: "Req[${requestId}] end"
         }));
       });
 
@@ -402,14 +402,14 @@ function buildMiddlewareFromMapping (context, mapping) {
       }
       // Render the packet
       renderPacketToResponse(packet, res.status(packet.statusCode || 500));
-      L.has('error') && L.log('error', reqTR.add(packet).toMessage({
-        text: 'Req[${requestId}] has failed, status[${statusCode}], headers: ${headers}, body: ${body}'
+      L.has("error") && L.log("error", reqTR.add(packet).toMessage({
+        text: "Req[${requestId}] has failed, status[${statusCode}], headers: ${headers}, body: ${body}"
       }));
     });
 
     promize.finally(function () {
-      L.has('silly') && L.log('silly', reqTR.toMessage({
-        text: 'Req[${requestId}] end'
+      L.has("silly") && L.log("silly", reqTR.toMessage({
+        text: "Req[${requestId}] end"
       }));
     });
   };
@@ -455,8 +455,8 @@ function applyValidator (validator, defaultRef, reqData, reqOpts, services) {
 
 function addDefaultHeaders (packet, responseOptions) {
   packet.headers = packet.headers || {};
-  const headerName = responseOptions['returnCode']['headerName'];
-  if ((typeof headerName === 'string') && !(headerName in packet.headers)) {
+  const headerName = responseOptions["returnCode"]["headerName"];
+  if ((typeof headerName === "string") && !(headerName in packet.headers)) {
     packet.headers[headerName] = 0;
   }
   return packet;
@@ -491,22 +491,22 @@ function transformErrorObject (error, responseOptions) {
   return packet;
 }
 
-const ERROR_FIELDS = [ 'statusCode', 'headers', 'body' ];
+const ERROR_FIELDS = [ "statusCode", "headers", "body" ];
 
 function transformScalarError (error, responseOptions = {}, packet = {}) {
   if (error === null) {
     packet.body = {
-      type: 'null',
-      message: 'Error is null'
+      type: "null",
+      message: "Error is null"
     };
   } else if (lodash.isString(error)) {
     packet.body = {
-      type: 'string',
+      type: "string",
       message: error
     };
   } else if (lodash.isArray(error)) {
     packet.body = {
-      type: 'array',
+      type: "array",
       payload: error
     };
   } else if (lodash.isObject(error)) {
@@ -518,13 +518,13 @@ function transformScalarError (error, responseOptions = {}, packet = {}) {
   } else {
     packet.body = {
       type: (typeof error),
-      message: 'Error: ' + error,
+      message: "Error: " + error,
       payload: error
     };
   }
   packet.statusCode = packet.statusCode || 500;
   packet.headers = packet.headers || {};
-  const returnCodeName = lodash.get(responseOptions, 'returnCode.headerName', 'X-Return-Code');
+  const returnCodeName = lodash.get(responseOptions, "returnCode.headerName", "X-Return-Code");
   if (!(returnCodeName in packet.headers)) {
     packet.headers[returnCodeName] = -1;
   }
@@ -550,7 +550,7 @@ function extractRequestOptions (req, requestOptions, opts = {}, errors) {
   }
 
   if (opts.userAgentEnabled) {
-    result.userAgent = parseUserAgent(req.get('User-Agent'));
+    result.userAgent = parseUserAgent(req.get("User-Agent"));
   }
 
   for (const key in opts.extensions) {
@@ -591,7 +591,7 @@ function renderPacketToResponse_Optimized (packet = {}, res) {
   if (packet.body === undefined || packet.body === null) {
     res.end();
   } else {
-    if (typeof packet.body === 'string') {
+    if (typeof packet.body === "string") {
       res.send(packet.body);
     } else {
       res.json(packet.body);
@@ -601,6 +601,6 @@ function renderPacketToResponse_Optimized (packet = {}, res) {
 
 let renderPacketToResponse = renderPacketToResponse_Standard;
 
-if (chores.isUpgradeSupported('optimization-mode')) {
+if (chores.isUpgradeSupported("optimization-mode")) {
   renderPacketToResponse = renderPacketToResponse_Optimized;
 }

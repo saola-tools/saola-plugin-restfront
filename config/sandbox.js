@@ -3,67 +3,67 @@ module.exports = {
     appRestfront: {
       requestOptions: {
         requestId: {
-          headerName: 'X-Request-Id',
-          optionName: 'requestId',
+          headerName: "X-Request-Id",
+          optionName: "requestId",
           required: false,
         },
         segmentId: {
-          headerName: 'X-Segment-Id',
+          headerName: "X-Segment-Id",
         },
         platformApp: {
-          headerName: 'X-Platform-App',
+          headerName: "X-Platform-App",
         },
         schemaVersion: {
-          headerName: 'X-Schema-Version',
+          headerName: "X-Schema-Version",
         },
         clientType: {
-          headerName: 'X-App-Type',
+          headerName: "X-App-Type",
         },
         clientVersion: {
-          headerName: 'X-App-Version',
+          headerName: "X-App-Version",
         },
         languageCode: {
-          headerName: 'X-Lang-Code',
+          headerName: "X-Lang-Code",
         },
         appTierType: {
-          headerName: 'X-Tier-Type',
+          headerName: "X-Tier-Type",
         },
         appUserType: {
-          headerName: 'X-User-Type',
+          headerName: "X-User-Type",
         },
         mockSuite: {
-          headerName: 'X-Mock-Suite',
+          headerName: "X-Mock-Suite",
         },
         mockState: {
-          headerName: 'X-Mock-State',
+          headerName: "X-Mock-State",
         }
       },
       responseOptions: {
         packageRef: {
-          headerName: 'X-Package-Ref',
+          headerName: "X-Package-Ref",
         },
         returnCode: {
-          headerName: 'X-Return-Code',
+          headerName: "X-Return-Code",
         }
       },
       errorCodes: {
         RequestOptionNotFound: {
-          message: 'Required request options not found',
+          message: "Required request options not found",
           returnCode: 100,
           statusCode: 400
         },
         RequestTimeoutOnServer: {
-          message: 'Request timeout',
+          message: "Request timeout",
           returnCode: 101,
           statusCode: 408
         },
         RequestPreValidationError: {
-          message: 'The http request is invalid',
+          message: "The http request is invalid",
           returnCode: 102,
           statusCode: 400
         },
         RequestPostValidationError: {
-          message: 'The sanitized body is invalid',
+          message: "The sanitized body is invalid",
           returnCode: 103,
           statusCode: 400
         },
