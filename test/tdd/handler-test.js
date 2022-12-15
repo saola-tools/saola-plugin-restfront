@@ -8,8 +8,88 @@ const sinon = require('liberica').sinon;
 const path = require('path');
 
 describe('handler', function() {
-  const app = require(path.join(__dirname, '../app/example'));
-  const sandboxConfig = lodash.get(app.config, ['sandbox', 'default', 'plugins', 'appRestfront']);
+  // const app = require(path.join(__dirname, '../app/example'));
+  // const sandboxConfig = lodash.get(app.config, ['sandbox', 'default', 'plugins', 'appRestfront']);
+  // console.log(JSON.stringify(sandboxConfig, null, 2));
+  //
+  const sandboxConfig = {
+    "contextPath": "/restfront",
+    "apiPath": "rest",
+    "mappingStore": {
+      "devebot-application": "app-restfront/test/app/example/lib/mappings/req-to-rpc"
+    },
+    "static": {
+      "apidoc": "app-restfront/test/app/example/public/apidoc",
+      "assets": "app-restfront/test/app/example/public/assets"
+    },
+    "requestOptions": {
+      "requestId": {
+        "headerName": "X-Request-Id",
+        "optionName": "requestId",
+        "required": false
+      },
+      "segmentId": {
+        "headerName": "X-Segment-Id"
+      },
+      "platformApp": {
+        "headerName": "X-Platform-App"
+      },
+      "schemaVersion": {
+        "headerName": "X-Schema-Version"
+      },
+      "clientType": {
+        "headerName": "X-App-Type"
+      },
+      "clientVersion": {
+        "headerName": "X-App-Version"
+      },
+      "languageCode": {
+        "headerName": "X-Lang-Code"
+      },
+      "appTierType": {
+        "headerName": "X-Tier-Type"
+      },
+      "appUserType": {
+        "headerName": "X-User-Type"
+      },
+      "mockSuite": {
+        "headerName": "X-Mock-Suite"
+      },
+      "mockState": {
+        "headerName": "X-Mock-State"
+      }
+    },
+    "responseOptions": {
+      "packageRef": {
+        "headerName": "X-Package-Ref"
+      },
+      "returnCode": {
+        "headerName": "X-Return-Code"
+      }
+    },
+    "errorCodes": {
+      "RequestOptionNotFound": {
+        "message": "Required request options not found",
+        "returnCode": 100,
+        "statusCode": 400
+      },
+      "RequestTimeoutOnServer": {
+        "message": "Request timeout",
+        "returnCode": 101,
+        "statusCode": 408
+      },
+      "RequestPreValidationError": {
+        "message": "The http request is invalid",
+        "returnCode": 102,
+        "statusCode": 400
+      },
+      "RequestPostValidationError": {
+        "message": "The sanitized body is invalid",
+        "returnCode": 103,
+        "statusCode": 400
+      }
+    }
+  };
 
   describe('sanitizeMappings()', function() {
     const loggingFactory = mockit.createLoggingFactoryMock({ captureMethodCall: false });
