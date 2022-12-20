@@ -4,7 +4,7 @@ const Devebot = require("devebot");
 const chores = Devebot.require("chores");
 const envcloak = require("envcloak").instance;
 
-const app = require("../../app");
+const app = require("../app/simplest");
 
 describe("app.server", function() {
   before(function() {

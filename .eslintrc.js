@@ -1,6 +1,8 @@
 module.exports = {
   "env": {
-    "node": true
+    "node": true,
+    "commonjs": true,
+    "mocha": true
   },
   "extends": [
     "promise",
