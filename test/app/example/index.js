@@ -1,13 +1,13 @@
-'use strict';
+"use strict";
 
-const path = require('path');
+const path = require("path");
 
-const app = require('devebot').launchApplication({
+const app = require("devebot").launchApplication({
   appRootPath: __dirname
 }, [
   {
-    name: 'app-restfront',
-    path: path.join(__dirname, '../../../index.js')
+    name: "app-restfront",
+    path: path.join(__dirname, "../../../index.js")
   },
 ]);
 

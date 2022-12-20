@@ -1,9 +1,9 @@
-'use strict';
+"use strict";
 
 module.exports = {
   plugins: {
     appRestfront: {
-      mappingStore: require('path').join(__dirname, '../lib/mappings/req-to-rpc-deprecated')
+      mappingStore: require("path").join(__dirname, "../lib/mappings/req-to-rpc-deprecated")
     }
   }
 };

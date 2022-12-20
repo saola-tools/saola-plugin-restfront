@@ -1,4 +1,4 @@
-'use strict';
+"use strict";
 
 function Fibonacci (P) {
   let n = P && P.number && P.number >= 0 ? P.number : null;
@@ -25,6 +25,6 @@ function Fibonacci (P) {
     while (this.next()) {}
     return this.result();
   };
-};
+}
 
 module.exports = Fibonacci;

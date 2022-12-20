@@ -1,66 +1,66 @@
-'use strict';
+"use strict";
 
 const mappings = {
-  apiPath: '/sub',
+  apiPath: "/sub",
   apimaps: [
     {
-      path: '/:apiVersion/fibonacci/calc/:number',
-      method: 'GET',
+      path: "/:apiVersion/fibonacci/calc/:number",
+      method: "GET",
       requestOptions: {
         requestId: {
           required: true
         }
       },
-      errorSource: 'otherErrorSource',
+      errorSource: "otherErrorSource",
       input: {
         preValidator: function (req, reqOpts, services) {
-          const demoAction = req.get('X-Demo-Action');
+          const demoAction = req.get("X-Demo-Action");
           const L = services.logger;
           const T = services.tracer;
-          L.has('debug') && L.log('debug', T.add({
+          L.has("debug") && L.log("debug", T.add({
             demoAction, requestId: reqOpts.requestId
           }).toMessage({
-            tmpl: 'preValidator[${requestId}] the demoAction: [${demoAction}] has been captured'
+            tmpl: "preValidator[${requestId}] the demoAction: [${demoAction}] has been captured"
           }));
-          if (demoAction === 'pre-validation-failed') {
+          if (demoAction === "pre-validation-failed") {
             return {
               valid: false,
               errors: { demoAction }
-            }
+            };
           }
           return true;
         },
         transform: function (req, reqOpts, services) {
           const L = services.logger;
           const T = services.tracer;
-          L.has('debug') && L.log('debug', T.add({
+          L.has("debug") && L.log("debug", T.add({
             requestId: reqOpts.requestId
           }).toMessage({
-            tmpl: 'transform[${requestId}] the request is transforming'
+            tmpl: "transform[${requestId}] the request is transforming"
           }));
-          return { number: req.params.number }
+          return { number: req.params.number };
         },
         postValidator: function (data, reqOpts, services) {
           const L = services.logger;
           const T = services.tracer;
-          L.has('debug') && L.log('debug', T.add(reqOpts).toMessage({
-            tmpl: 'postValidator[${requestId}] is invoked'
+          L.has("debug") && L.log("debug", T.add(reqOpts).toMessage({
+            tmpl: "postValidator[${requestId}] is invoked"
           }));
           if (data && data.number >= 49) {
             return {
               valid: false,
-              errorName: 'MaximumExceeding',
+              errorName: "MaximumExceeding",
               errors: [
-                'Maximum input number exceeded'
+                "Maximum input number exceeded"
               ]
-            }
+            };
           }
           return true;
         },
         jsonschema: {}
       },
-      serviceName: 'application/example',
-      methodName: 'fibonacci',
+      serviceName: "application/example",
+      methodName: "fibonacci",
       output: {
         transform: function(result, req) {
           return result;
@@ -444,6 +444,6 @@ const mappings = {
         }
     }
   }
-}
+};
 
 module.exports = mappings;

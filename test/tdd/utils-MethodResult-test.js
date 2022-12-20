@@ -1,24 +1,24 @@
-'use strict';
+"use strict";
 
-const assert = require('liberica').assert;
+const assert = require("liberica").assert;
 
-const { filterMethodResult } = require('../../lib/utils');
+const { filterMethodResult } = require("../../lib/utils");
 
-describe('utils', function() {
-  describe('filterMethodResult()', function() {
-    it('transform null object to null', function() {
+describe("utils", function() {
+  describe("filterMethodResult()", function() {
+    it("transform null object to null", function() {
         const resp = filterMethodResult()(null);
         false && console.log(resp);
         assert.isNull(resp);
     });
     //
-    it('transform null object to null with basepath', function() {
+    it("transform null object to null with basepath", function() {
         const resp = filterMethodResult({ basepath: "body" })(null);
         false && console.log(resp);
         assert.isNull(resp);
     });
     //
-    it('transform normal object (pick: ["id", "username", "email"])', function() {
+    it("transform normal object (pick: [\"id\", \"username\", \"email\"])", function() {
       const transform1 = filterMethodResult({
         pick: [
           "username", "email", "id"
@@ -29,17 +29,17 @@ describe('utils', function() {
         "_id": "1234567890",
         "username": "JohnDoe",
         "email": "john.doe@gmail.com",
-      }
+      };
       const expected = {
         "username": "JohnDoe",
         "email": "john.doe@gmail.com"
-      }
+      };
       //
       false && console.log(JSON.stringify(transform1(methodResult), null, 2));
       assert.deepEqual(transform1(methodResult), expected);
     });
     //
-    it('transform normal object (basepath: "body.profile", clone: true, pick: ["id", "username", "email"])', function() {
+    it("transform normal object (basepath: \"body.profile\", clone: true, pick: [\"id\", \"username\", \"email\"])", function() {
       const transform1 = filterMethodResult({
         clone: true,
         basepath: "body.profile",
@@ -70,7 +70,7 @@ describe('utils', function() {
             }
           }
         }
-      }
+      };
       const expected = {
         "headers": {
           "X-Request-Id": "AAC41B45-63FE-4006-AED2-F5BE0823E491"
@@ -88,7 +88,7 @@ describe('utils', function() {
       assert.deepEqual(transform2(methodResult), expected);
     });
     //
-    it('transform normal object (basepath: "body.profile", clone: true, omit: ["_id"])', function() {
+    it("transform normal object (basepath: \"body.profile\", clone: true, omit: [\"_id\"])", function() {
       const transform1 = filterMethodResult({
         clone: true,
         basepath: "body.profile",
@@ -118,7 +118,7 @@ describe('utils', function() {
             }
           }
         }
-      }
+      };
       const expected = {
         "headers": {
           "X-Request-Id": "AAC41B45-63FE-4006-AED2-F5BE0823E491"
