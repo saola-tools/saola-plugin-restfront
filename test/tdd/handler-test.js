@@ -251,12 +251,82 @@ describe("handler", function() {
     });
   });
 
+  describe("upgradeMapping()", function() {
+    let Handler, upgradeMapping;
+
+    beforeEach(function() {
+      Handler = mockit.acquire("handler", { libraryDir: "../lib" });
+      upgradeMapping = mockit.get(Handler, "upgradeMapping");
+    });
+
+    it("Initialize a standard mappings structure when the input is an empty object", function() {
+      const mapping = {}
+      const expected = {
+        "input": {
+          "mutate": {}
+        },
+        "inlet": {},
+        "output": {
+          "mutate": {}
+        },
+        "error": {
+          "mutate": {}
+        }
+      };
+      const result = upgradeMapping(mapping);
+      false && console.log(JSON.stringify(result, null, 2));
+      assert.deepEqual(result, expected);
+    });
+
+    it("Convert deprecated function names to standard function names", function() {
+      const mapping = {
+        transformRequest: function(req) {
+          return { number: req.params.number };
+        },
+        transformResponse: function(result, req) {
+          return result;
+        },
+        transformError: function(err, req) {
+          return err;
+        }
+      };
+      const expected = {
+        "input": {
+          "mutate": {
+          },
+          "transform": lodash.get(mapping, "transformRequest")
+        },
+        "inlet": {},
+        "output": {
+          "mutate": {
+          },
+          "transform": lodash.get(mapping, "transformResponse")
+        },
+        "error": {
+          "mutate": {
+          },
+          "transform": lodash.get(mapping, "transformError")
+        }
+      };
+      const result = upgradeMapping(mapping);
+      false && console.log(JSON.stringify(result, null, 2));
+      assert.deepEqual(result, expected);
+    });
+  });
+
   describe("mutateRenameFields()", function() {
     let Handler, mutateRenameFields;
+    let dataObject;
 
     beforeEach(function() {
       Handler = mockit.acquire("handler", { libraryDir: "../lib" });
       mutateRenameFields = mockit.get(Handler, "mutateRenameFields");
+      dataObject = {
+        name: "Hello, world",
+        phoneNumber: "+84972508126",
+        age: 27,
+        gender: true
+      }
     });
 
     it("do nothing if nameMappings is undefined", function() {
@@ -265,7 +335,31 @@ describe("handler", function() {
       assert.deepEqual(output, original);
     });
 
-    it("change the field names based on the namingMappings properly");
+    it("Do nothing with the empty object", function() {
+      assert.deepEqual(mutateRenameFields({}, {"name": "newName"}), {});
+    });
+
+    it("Do nothing with the empty mappings", function() {
+      const mappings = {};
+      const expected = lodash.cloneDeep(dataObject);
+      assert.deepEqual(mutateRenameFields(dataObject, mappings), expected);
+    });
+
+    it("Change the field names based on the namingMappings properly", function() {
+      const mappings = {
+        "name": "fullname",
+        "phoneNumber": "phone.number"
+      }
+      const expected = {
+        fullname: "Hello, world",
+        phone: {
+          number: "+84972508126"
+        },
+        age: 27,
+        gender: true
+      }
+      assert.deepEqual(mutateRenameFields(dataObject, mappings), expected);
+    });
   });
 
   describe("extractRequestOptions()", function() {
@@ -699,48 +793,6 @@ describe("handler", function() {
 
     it("Return 'true' if reqMethod matchs some support methods", function() {
       assert.isTrue(isMethodIncluded(["GET", "post"], "Get"));
-    });
-  });
-
-  describe("mutateRenameFields", function() {
-    let Handler, mutateRenameFields;
-    let dataObject;
-
-    beforeEach(function() {
-      Handler = mockit.acquire("handler", { libraryDir: "../lib" });
-      mutateRenameFields = mockit.get(Handler, "mutateRenameFields");
-      dataObject = {
-        name: "Hello, world",
-        phoneNumber: "+84972508126",
-        age: 27,
-        gender: true
-      }
-    });
-
-    it("Do nothing with the empty object", function() {
-      assert.deepEqual(mutateRenameFields({}, {"name": "newName"}), {});
-    });
-
-    it("Do nothing with the empty mappings", function() {
-      const mappings = {};
-      const expected = lodash.cloneDeep(dataObject);
-      assert.deepEqual(mutateRenameFields(dataObject, mappings), expected);
-    });
-
-    it("Rename the fields with not empty mappings should return a new object correctly", function() {
-      const mappings = {
-        "name": "fullname",
-        "phoneNumber": "phone.number"
-      }
-      const expected = {
-        fullname: "Hello, world",
-        phone: {
-          number: "+84972508126"
-        },
-        age: 27,
-        gender: true
-      }
-      assert.deepEqual(mutateRenameFields(dataObject, mappings), expected);
     });
   });
 });
