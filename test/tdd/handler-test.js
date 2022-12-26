@@ -393,6 +393,15 @@ describe("handler", function() {
       extractRequestOptions = mockit.get(Handler, "extractRequestOptions");
     });
 
+    it("convert the requestOption from string type to an object", function() {
+      const output = extractRequestOptions(req, { "requestId": "X-Request-Id"} );
+      false && console.log(JSON.stringify(output, null, 2));
+      const expected = {
+        "requestId": "52160bbb-cac5-405f-a1e9-a55323b17938",
+      };
+      assert.deepInclude(output, expected);
+    });
+
     it("extract the predefined headers properly", function() {
       const output = extractRequestOptions(req, sandboxConfig.requestOptions);
       const expected = {
@@ -621,6 +630,42 @@ describe("handler", function() {
     it("predefined error [error]");
 
     it("undefined error [error]");
+  });
+
+  describe("transformErrorObject()", function() {
+    let Handler, transformErrorObject;
+
+    beforeEach(function() {
+      Handler = mockit.acquire("handler", { libraryDir: "../lib" });
+      transformErrorObject = mockit.get(Handler, "transformErrorObject");
+    });
+
+    it("convert a normal error object to a JSON response body", function() {
+      const error = {
+        statusCode: 400,
+        returnCode: 1001,
+        name: "ResourceNotFoundError",
+        payload: {
+          "id": "74FC97E2-0CEC-4CC2-98CF-9B6C36E6853E"
+        }
+      };
+      const expected = {
+        "statusCode": 400,
+        "headers": {
+          "X-Return-Code": 1001
+        },
+        "body": {
+          "name": "ResourceNotFoundError",
+          "message": undefined,
+          "payload": {
+            "id": "74FC97E2-0CEC-4CC2-98CF-9B6C36E6853E"
+          }
+        }
+      };
+      const result = transformErrorObject(error, sandboxConfig.responseOptions);
+      false && console.log(JSON.stringify(result, null, 2));
+      assert.deepEqual(result, expected);
+    });
   });
 
   describe("transformScalarError()", function() {
