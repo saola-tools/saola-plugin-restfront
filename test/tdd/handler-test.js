@@ -668,6 +668,81 @@ describe("handler", function() {
       });
     });
   });
+
+  describe("isMethodIncluded", function() {
+    let Handler, isMethodIncluded;
+
+    beforeEach(function() {
+      Handler = mockit.acquire("handler", { libraryDir: "../lib" });
+      isMethodIncluded = mockit.get(Handler, "isMethodIncluded");
+    });
+
+    it("Return 'false' if reqMethod is empty", function() {
+      assert.isFalse(isMethodIncluded([], ""));
+    });
+
+    it("Return 'false' if reqMethod is empty", function() {
+      assert.isFalse(isMethodIncluded(["", "Put"], ""));
+    });
+
+    it("Return 'false' if the support methods is empty", function() {
+      assert.isFalse(isMethodIncluded([], "Get"));
+    });
+
+    it("Return 'false' if reqMethod does not match any support methods", function() {
+      assert.isFalse(isMethodIncluded(["GET", "post"], "put"));
+    });
+
+    it("Return 'true' if reqMethod matchs the support method", function() {
+      assert.isTrue(isMethodIncluded("GET", "Get"));
+    });
+
+    it("Return 'true' if reqMethod matchs some support methods", function() {
+      assert.isTrue(isMethodIncluded(["GET", "post"], "Get"));
+    });
+  });
+
+  describe("mutateRenameFields", function() {
+    let Handler, mutateRenameFields;
+    let dataObject;
+
+    beforeEach(function() {
+      Handler = mockit.acquire("handler", { libraryDir: "../lib" });
+      mutateRenameFields = mockit.get(Handler, "mutateRenameFields");
+      dataObject = {
+        name: "Hello, world",
+        phoneNumber: "+84972508126",
+        age: 27,
+        gender: true
+      }
+    });
+
+    it("Do nothing with the empty object", function() {
+      assert.deepEqual(mutateRenameFields({}, {"name": "newName"}), {});
+    });
+
+    it("Do nothing with the empty mappings", function() {
+      const mappings = {};
+      const expected = lodash.cloneDeep(dataObject);
+      assert.deepEqual(mutateRenameFields(dataObject, mappings), expected);
+    });
+
+    it("Rename the fields with not empty mappings should return a new object correctly", function() {
+      const mappings = {
+        "name": "fullname",
+        "phoneNumber": "phone.number"
+      }
+      const expected = {
+        fullname: "Hello, world",
+        phone: {
+          number: "+84972508126"
+        },
+        age: 27,
+        gender: true
+      }
+      assert.deepEqual(mutateRenameFields(dataObject, mappings), expected);
+    });
+  });
 });
 
 function RequestMock (defs = {}) {
