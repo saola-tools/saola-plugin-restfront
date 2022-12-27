@@ -347,77 +347,9 @@ function buildMiddlewareFromMapping (context, mapping) {
       }));
     });
 
-    if (chores.isUpgradeSupported("app-restfront-legacy-error-to-response")) {
-      promize = promize.catch(function (failed) {
-        let packet = {};
-        // transform error object to packet
-        if (mapping.error && mapping.error.enabled !== false && mapping.error.transform) {
-          packet = mapping.error.transform(failed, req, reqOpts, services);
-          packet = packet || {};
-          packet.body = packet.body || {
-            message: "mapping.error.transform() output don't have body field"
-          };
-        } else {
-          if (failed instanceof Error) {
-            packet = transformErrorObject(failed, responseOptions);
-            if (chores.isDevelopmentMode()) {
-              packet.body.stack = lodash.split(failed.stack, "\n");
-            }
-          } else {
-            packet = transformScalarError(failed, responseOptions, packet);
-          }
-        }
-        // rename the fields
-        if (mapping.error && mapping.error.enabled !== false && mapping.error.mutate && mapping.error.mutate.rename) {
-          packet = mutateRenameFields(packet, mapping.error.mutate.rename);
-        }
-        // Render the packet
-        packet.statusCode = packet.statusCode || 500;
-        renderPacketToResponse(packet, res);
-        L.has("error") && L.log("error", reqTR.add(packet).toMessage({
-          text: "Req[${requestId}] has failed, status[${statusCode}], headers: ${headers}, body: ${body}"
-        }));
-        //
-        return Promise.reject(failed);
-      });
+    const reqCtx = { L, reqTR };
 
-      promize.finally(function () {
-        L.has("silly") && L.log("silly", reqTR.toMessage({
-          text: "Req[${requestId}] end"
-        }));
-      });
-
-      return promize;
-    }
-
-    promize = promize.catch(function (failed) {
-      let packet = {};
-      // apply the explicit transform function
-      if (mapping.error && mapping.error.enabled !== false && mapping.error.transform) {
-        failed = mapping.error.transform(failed, req, reqOpts, services);
-      }
-      // transform error object to packet
-      if (failed instanceof Error) {
-        packet = transformErrorObject(failed, responseOptions);
-        if (chores.isDevelopmentMode()) {
-          packet.body.stack = lodash.split(failed.stack, "\n");
-        }
-      } else {
-        packet = transformScalarError(failed, responseOptions, packet);
-      }
-      // rename the fields
-      if (mapping.error && mapping.error.enabled !== false && mapping.error.mutate && mapping.error.mutate.rename) {
-        packet = mutateRenameFields(packet, mapping.error.mutate.rename);
-      }
-      // Render the packet
-      packet.statusCode = packet.statusCode || 500;
-      renderPacketToResponse(packet, res);
-      L.has("error") && L.log("error", reqTR.add(packet).toMessage({
-        text: "Req[${requestId}] has failed, status[${statusCode}], headers: ${headers}, body: ${body}"
-      }));
-      //
-      return Promise.reject(failed);
-    });
+    promize = promize.catch(defineProcessingErrorToResp(reqCtx, mapping, req, reqOpts, services, responseOptions, res));
 
     promize.finally(function () {
       L.has("silly") && L.log("silly", reqTR.toMessage({
@@ -617,4 +549,78 @@ let renderPacketToResponse = renderPacketToResponse_Standard;
 
 if (chores.isUpgradeSupported("optimization-mode")) {
   renderPacketToResponse = renderPacketToResponse_Optimized;
+}
+
+function defineProcessingErrorToRespLegacy (reqCtx, mapping, req, reqOpts, services, responseOptions, res) {
+  const { L, reqTR } = reqCtx;
+  return function (failed) {
+    let packet = {};
+    // transform error object to packet
+    if (mapping.error && mapping.error.enabled !== false && mapping.error.transform) {
+      packet = mapping.error.transform(failed, req, reqOpts, services);
+      packet = packet || {};
+      packet.body = packet.body || {
+        message: "mapping.error.transform() output don't have body field"
+      };
+    } else {
+      if (failed instanceof Error) {
+        packet = transformErrorObject(failed, responseOptions);
+        if (chores.isDevelopmentMode()) {
+          packet.body.stack = lodash.split(failed.stack, "\n");
+        }
+      } else {
+        packet = transformScalarError(failed, responseOptions, packet);
+      }
+    }
+    // rename the fields
+    if (mapping.error && mapping.error.enabled !== false && mapping.error.mutate && mapping.error.mutate.rename) {
+      packet = mutateRenameFields(packet, mapping.error.mutate.rename);
+    }
+    // Render the packet
+    packet.statusCode = packet.statusCode || 500;
+    renderPacketToResponse(packet, res);
+    L.has("error") && L.log("error", reqTR.add(packet).toMessage({
+      text: "Req[${requestId}] has failed, status[${statusCode}], headers: ${headers}, body: ${body}"
+    }));
+    //
+    return Promise.reject(failed);
+  };
+}
+
+function defineProcessingErrorToRespModern (reqCtx, mapping, req, reqOpts, services, responseOptions, res) {
+  const { L, reqTR } = reqCtx;
+  return function (failed) {
+    let packet = {};
+    // apply the explicit transform function
+    if (mapping.error && mapping.error.enabled !== false && mapping.error.transform) {
+      failed = mapping.error.transform(failed, req, reqOpts, services);
+    }
+    // transform error object to packet
+    if (failed instanceof Error) {
+      packet = transformErrorObject(failed, responseOptions);
+      if (chores.isDevelopmentMode()) {
+        packet.body.stack = lodash.split(failed.stack, "\n");
+      }
+    } else {
+      packet = transformScalarError(failed, responseOptions, packet);
+    }
+    // rename the fields
+    if (mapping.error && mapping.error.enabled !== false && mapping.error.mutate && mapping.error.mutate.rename) {
+      packet = mutateRenameFields(packet, mapping.error.mutate.rename);
+    }
+    // Render the packet
+    packet.statusCode = packet.statusCode || 500;
+    renderPacketToResponse(packet, res);
+    L.has("error") && L.log("error", reqTR.add(packet).toMessage({
+      text: "Req[${requestId}] has failed, status[${statusCode}], headers: ${headers}, body: ${body}"
+    }));
+    //
+    return Promise.reject(failed);
+  };
+}
+
+let defineProcessingErrorToResp = defineProcessingErrorToRespModern;
+
+if (chores.isUpgradeSupported("app-restfront-legacy-error-to-response")) {
+  defineProcessingErrorToResp = defineProcessingErrorToRespLegacy;
 }
