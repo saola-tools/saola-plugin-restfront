@@ -248,10 +248,6 @@ function buildMiddlewareFromMapping (context, mapping) {
 
     let promize = Promise.resolve();
 
-    if (timeout && timeout > 0) {
-      promize = promize.timeout(timeout);
-    }
-
     const failedReqOpts = [];
     const reqOpts = extractRequestOptions(req, requestOptions, {
       userAgentEnabled: sandboxConfig.userAgentEnabled,
@@ -259,12 +255,14 @@ function buildMiddlewareFromMapping (context, mapping) {
     }, failedReqOpts);
 
     if (failedReqOpts.length > 0) {
-      promize = Promise.reject(errorBuilder.newError("RequestOptionNotFound", {
-        payload: {
-          requestOptions: failedReqOpts
-        },
-        language: reqOpts.languageCode
-      }));
+      promize = promize.then(function() {
+        return Promise.reject(errorBuilder.newError("RequestOptionNotFound", {
+          payload: {
+            requestOptions: failedReqOpts
+          },
+          language: reqOpts.languageCode
+        }));
+      });
     }
 
     if (mapping.input && mapping.input.enabled !== false && mapping.input.preValidator) {
@@ -330,6 +328,11 @@ function buildMiddlewareFromMapping (context, mapping) {
       });
     }
 
+    // set the timeout at the end of the processing flow (before 'catch' blocks)
+    if (timeout && timeout > 0) {
+      promize = promize.timeout(timeout);
+    }
+
     promize = promize.catch(Promise.TimeoutError, function() {
       L.has("error") && L.log("error", reqTR.add({
         timeout: reqOpts.timeout
@@ -374,6 +377,8 @@ function buildMiddlewareFromMapping (context, mapping) {
         L.has("error") && L.log("error", reqTR.add(packet).toMessage({
           text: "Req[${requestId}] has failed, status[${statusCode}], headers: ${headers}, body: ${body}"
         }));
+        //
+        return Promise.reject(failed);
       });
 
       promize.finally(function () {
@@ -410,6 +415,8 @@ function buildMiddlewareFromMapping (context, mapping) {
       L.has("error") && L.log("error", reqTR.add(packet).toMessage({
         text: "Req[${requestId}] has failed, status[${statusCode}], headers: ${headers}, body: ${body}"
       }));
+      //
+      return Promise.reject(failed);
     });
 
     promize.finally(function () {

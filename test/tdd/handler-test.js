@@ -1,6 +1,7 @@
 "use strict";
 
 const devebot = require("devebot");
+const Promise = devebot.require("bluebird");
 const lodash = devebot.require("lodash");
 const { assert, mockit, sinon } = require("liberica");
 const path = require("path");
@@ -754,7 +755,36 @@ describe("handler", function() {
       });
     });
 
-    it("[timeout]");
+    it("An error is raised when the processing time exceeds the timeout", function() {
+      const context = { ...ctx };
+      const mapping = {
+        method: "GET",
+        inlet: {
+          process: function (serviceMethod, res, reqData, reqOpts, services) {
+            return Promise.delay(1000).then(function() {
+              return {};
+            });
+          }
+        },
+        timeout: 500
+      };
+      const middleware = buildMiddlewareFromMapping(context, mapping);
+      assert.isFunction(middleware);
+      //
+      const req = new RequestMock();
+      const res = new ResponseMock();
+      const next = sinon.stub();
+      const resultPromise = middleware(req, res, next);
+      //
+      assert.isNotNull(resultPromise);
+      //
+      return resultPromise.then(function(info) {
+        false && console.log("Output: ", info);
+      }).catch(function(error) {
+        assert.equal(error.name, "RequestTimeoutOnServer");
+        false && console.log("Error: ", error);
+      });
+    });
 
     it("service method is a normal function [error]");
 
@@ -994,7 +1024,7 @@ function RequestMock (defs = {}) {
     },
     method: {
       get: function() {
-        return defs.method;
+        return defs.method || "GET";
       }
     },
     body: {
