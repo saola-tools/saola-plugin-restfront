@@ -556,61 +556,87 @@ describe("handler", function() {
     });
   });
 
-  describe("renderPacketToResponse()", function() {
-    let Handler, renderPacketToResponse;
+  for (const [index, label] of ["Standard", "Optimized"].entries()) {
+    describe("renderPacketToResponse_" + label + "()", function() {
+      let Handler, renderPacketToResponse;
 
-    beforeEach(function() {
-      Handler = mockit.acquire("handler", { libraryDir: "../lib" });
-      renderPacketToResponse = mockit.get(Handler, "renderPacketToResponse");
-    });
+      beforeEach(function() {
+        Handler = mockit.acquire("handler", { libraryDir: "../lib" });
+        renderPacketToResponse = mockit.get(Handler, "renderPacketToResponse_" + label);
+      });
 
-    it("render empty packet", function() {
-      const res = new ResponseMock();
-      renderPacketToResponse({}, res);
-      assert.equal(res.set.callCount, 0);
-      assert.equal(res.text.callCount, 0);
-      assert.equal(res.json.callCount, 0);
-      assert.equal(res.end.callCount, 1);
-    });
+      it("render empty packet", function() {
+        const res = new ResponseMock();
+        renderPacketToResponse({}, res);
+        assert.equal(res.set.callCount, 0);
+        assert.equal(res.send.callCount, 0);
+        assert.equal(res.json.callCount, 0);
+        assert.equal(res.end.callCount, 1);
+      });
 
-    it("render with a null headers", function() {
-      const res = new ResponseMock();
-      renderPacketToResponse({
-        headers: null
-      }, res);
-      assert.equal(res.set.callCount, 0);
-    });
+      it("render a packet with body as string", function() {
+        const res = new ResponseMock();
+        renderPacketToResponse({
+          body: "Hello world"
+        }, res);
+        assert.equal(res.set.callCount, 0);
+        assert.equal(res.send.callCount, 1);
+        assert.equal(res.json.callCount, 0);
+        assert.equal(res.end.callCount, 0);
+      });
 
-    it("render with a headers as a string", function() {
-      const res = new ResponseMock();
-      renderPacketToResponse({
-        headers: "hello world"
-      }, res);
-      assert.equal(res.set.callCount, 0);
-    });
+      it("render a packet with body as object", function() {
+        const res = new ResponseMock();
+        renderPacketToResponse({
+          body: {
+            message: "Hello world"
+          }
+        }, res);
+        assert.equal(res.set.callCount, 0);
+        assert.equal(res.send.callCount, 0);
+        assert.equal(res.json.callCount, 1);
+        assert.equal(res.end.callCount, 0);
+      });
 
-    it("render with invalid headers (boolean/number)", function() {
-      const res = new ResponseMock();
-      renderPacketToResponse({
-        headers: true
-      }, res);
-      assert.equal(res.set.callCount, 0);
-    });
+      it("render with a null headers", function() {
+        const res = new ResponseMock();
+        renderPacketToResponse({
+          headers: null
+        }, res);
+        assert.equal(res.set.callCount, 0);
+      });
 
-    it("render a packet with 2 headers and empty body", function() {
-      const res = new ResponseMock();
-      renderPacketToResponse({
-        headers: {
-          "X-Request-Id": 0,
-          "X-Schema-Version": "1.0.0",
-        }
-      }, res);
-      assert.equal(res.set.callCount, 2);
-      assert.equal(res.text.callCount, 0);
-      assert.equal(res.json.callCount, 0);
-      assert.equal(res.end.callCount, 1);
+      it("render with a headers as a string", function() {
+        const res = new ResponseMock();
+        renderPacketToResponse({
+          headers: "hello world"
+        }, res);
+        assert.equal(res.set.callCount, 0);
+      });
+
+      it("render with invalid headers (boolean/number)", function() {
+        const res = new ResponseMock();
+        renderPacketToResponse({
+          headers: true
+        }, res);
+        assert.equal(res.set.callCount, 0);
+      });
+
+      it("render a packet with 2 headers and empty body", function() {
+        const res = new ResponseMock();
+        renderPacketToResponse({
+          headers: {
+            "X-Request-Id": 0,
+            "X-Schema-Version": "1.0.0",
+          }
+        }, res);
+        assert.equal(res.set.callCount, 2);
+        assert.equal(res.send.callCount, 0);
+        assert.equal(res.json.callCount, 0);
+        assert.equal(res.end.callCount, 1);
+      });
     });
-  });
+  }
 
   describe("buildMiddlewareFromMapping()", function() {
     const loggingFactory = mockit.createLoggingFactoryMock({ captureMethodCall: false });
@@ -1038,7 +1064,7 @@ function RequestMock (defs = {}) {
 function ResponseMock (defs = {}) {
   this.set = sinon.stub();
   this.status = sinon.stub();
-  this.text = sinon.stub();
+  this.send = sinon.stub();
   this.json = sinon.stub();
   this.end = sinon.stub();
 }
