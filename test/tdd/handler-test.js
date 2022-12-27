@@ -456,6 +456,30 @@ describe("handler", function() {
       assert.sameMembers(lodash.keys(output), STANDARD_REQ_OPTIONS.concat([ "timeout" ]));
     });
 
+    it("an error occured when a required option in requestOptions is not found in the request headers", function() {
+      const requestOptions = lodash.assign({
+        "tenantId": {
+          "headerName": "X-Tenant-Id",
+          "optionName": "tenantId",
+          "required": true
+        },
+      }, sandboxConfig.requestOptions);
+      const failedReqOpts = [];
+      const output = extractRequestOptions(req, requestOptions, {}, failedReqOpts);
+      false && console.log(JSON.stringify(output, null, 2));
+      const expected = {
+        "tenantId": undefined,
+        "requestId": "52160bbb-cac5-405f-a1e9-a55323b17938",
+        "clientType": "agent",
+        "clientVersion": "0.1.0",
+        "appTierType": "UAT",
+        "appUserType": "DEMO"
+      };
+      assert.deepInclude(output, expected);
+      false && console.log(JSON.stringify(failedReqOpts, null, 2));
+      assert.sameMembers(failedReqOpts, [ "tenantId" ]);
+    });
+
     const config = lodash.assign({ userAgentEnabled: true }, sandboxConfig);
 
     it("uaParser is safety: should not crack the requests in any case", function() {
