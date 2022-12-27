@@ -3,6 +3,8 @@
 const devebot = require("devebot");
 const Promise = devebot.require("bluebird");
 const lodash = devebot.require("lodash");
+const LogConfig = devebot.require("logolite").LogConfig;
+const envcloak = require("envcloak").instance;
 const { assert, mockit, sinon } = require("liberica");
 const path = require("path");
 
@@ -677,8 +679,17 @@ describe("handler", function() {
     let Handler, buildMiddlewareFromMapping;
 
     beforeEach(function() {
+      envcloak.setup({
+        DEVEBOT_ENV: "development"
+      });
+      LogConfig.reset();
       Handler = mockit.acquire("handler", { libraryDir: "../lib" });
       buildMiddlewareFromMapping = mockit.get(Handler, "buildMiddlewareFromMapping");
+    });
+
+    afterEach(function() {
+      envcloak.reset();
+      LogConfig.reset();
     });
 
     it("call the next() if the HTTP method is mismatched", function() {
@@ -792,6 +803,14 @@ describe("handler", function() {
             });
           }
         },
+        error: {
+          transform: function(failed, req, reqOpts, services) {
+            return failed;
+          },
+          mutate: {
+            rename: {}
+          }
+        },
         timeout: 500
       };
       const middleware = buildMiddlewareFromMapping(context, mapping);
@@ -806,13 +825,41 @@ describe("handler", function() {
       //
       return resultPromise.then(function(info) {
         false && console.log("Output: ", info);
+        assert.fail("This testcase must raise a timeout Error");
       }).catch(function(error) {
-        assert.equal(error.name, "RequestTimeoutOnServer");
         false && console.log("Error: ", error);
+        assert.equal(error.name, "RequestTimeoutOnServer");
       });
     });
 
-    it("service method is a normal function [error]");
+    it("service method is a normal function, but it raises a string based error", function() {
+      const context = { ...ctx };
+      const mapping = {
+        method: "GET",
+        inlet: {
+          process: function (serviceMethod, res, reqData, reqOpts, services) {
+            return Promise.reject("Error in string type");
+          }
+        }
+      };
+      const middleware = buildMiddlewareFromMapping(context, mapping);
+      assert.isFunction(middleware);
+      //
+      const req = new RequestMock();
+      const res = new ResponseMock();
+      const next = sinon.stub();
+      const resultPromise = middleware(req, res, next);
+      //
+      assert.isNotNull(resultPromise);
+      //
+      return resultPromise.then(function(info) {
+        false && console.log("Output: ", info);
+        assert.fail("This testcase must raise a string Error");
+      }).catch(function(error) {
+        false && console.log("Error: ", error);
+        assert.equal(error, "Error in string type");
+      });
+    });
 
     it("service method is a promise function [error]");
 
