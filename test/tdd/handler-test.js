@@ -612,6 +612,41 @@ describe("handler", function() {
   });
 
   describe("buildMiddlewareFromMapping()", function() {
+    const loggingFactory = mockit.createLoggingFactoryMock({ captureMethodCall: false });
+    const serviceSelector = {
+      lookupMethod: function(serviceName, methodName) {
+        return {
+          method: function(reqData, reqOpts) {
+            return {}
+          }
+        }
+      }
+    };
+    const errorBuilder = {
+      newError: function(name, options) {
+        const err = new Error();
+        err.name = name;
+        err.payload = options && options.payload;
+        return err;
+      }
+    };
+    const errorManager = {
+      getErrorBuilder: function() {
+        return errorBuilder;
+      }
+    };
+    const tracelogService = {
+      getRequestId: function(req) {
+        return "ADD7D6E0-0736-4B79-98C6-2F0EAE0D671C";
+      }
+    };
+    const ctx = {
+      blockRef: "app-restfront/handler",
+      L: loggingFactory.getLogger(),
+      T: loggingFactory.getTracer(),
+      errorManager, errorBuilder, serviceSelector, tracelogService
+    };
+
     let Handler, buildMiddlewareFromMapping;
 
     beforeEach(function() {
@@ -619,7 +654,105 @@ describe("handler", function() {
       buildMiddlewareFromMapping = mockit.get(Handler, "buildMiddlewareFromMapping");
     });
 
-    it("[ok]");
+    it("call the next() if the HTTP method is mismatched", function() {
+      const context = { ...ctx };
+      const mapping = {};
+      const middleware = buildMiddlewareFromMapping(context, mapping);
+      assert.isFunction(middleware);
+      //
+      const req = {};
+      const res = {};
+      const next = sinon.stub();
+      middleware(req, res, next);
+      //
+      assert.equal(next.callCount, 1);
+    });
+
+    it("call the next() if the service method is not a function", function() {
+      const serviceSelector = {
+        lookupMethod: function(serviceName, methodName) {
+          return {
+            method: "POST"
+          }
+        }
+      };
+      const context = { ...ctx, serviceSelector };
+      const mapping = { method: "GET" };
+      const middleware = buildMiddlewareFromMapping(context, mapping);
+      assert.isFunction(middleware);
+      //
+      const req = { method: "GET" };
+      const res = {};
+      const next = sinon.stub();
+      middleware(req, res, next);
+      //
+      assert.equal(next.callCount, 1);
+    });
+
+    it("Invoke a HTTP request to middleware with minimal default parameters", function() {
+      const context = { ...ctx };
+      const mapping = { method: "GET" };
+      const middleware = buildMiddlewareFromMapping(context, mapping);
+      assert.isFunction(middleware);
+      //
+      const req = { method: "GET" };
+      const res = new ResponseMock();
+      const next = sinon.stub();
+      middleware(req, res, next);
+      //
+      assert.equal(next.callCount, 0);
+    });
+
+    it("Invoke a HTTP request to middleware with input/output data transformation and renaming fields", function() {
+      const context = { ...ctx };
+      const mapping = {
+        method: "GET",
+        input: {
+          transform: function (req, reqOpts, services) {
+            return req.body;
+          },
+          mutate: {
+            rename: {
+              "name": "fullname"
+            }
+          }
+        },
+        output: {
+          transform: function (result, req, reqOpts, services) {
+            return {
+              body: result
+            };
+          },
+          mutate: {
+            rename: {}
+          }
+        }
+      };
+      const middleware = buildMiddlewareFromMapping(context, mapping);
+      assert.isFunction(middleware);
+      //
+      const req = new RequestMock({
+        method: "GET",
+        body: {
+          name: "John Doe",
+          email: "john.doe@gmail.com",
+          phoneNumber: "+84962306028",
+        }
+      });
+      const res = new ResponseMock();
+      const next = sinon.stub();
+      const resultPromise = middleware(req, res, next);
+      //
+      assert.isNotNull(resultPromise);
+      //
+      return resultPromise.then(function(info) {
+        false && console.log("Output: ", info);
+        return info;
+      }).catch(function(error) {
+        false && console.log("Error: ", error);
+        throw error;
+      });
+    });
 
     it("[timeout]");
 
@@ -852,6 +985,24 @@ function RequestMock (defs = {}) {
   this.get = function(name) {
     return store.headers[lodash.lowerCase(name)];
   };
+
+  Object.defineProperties(this, {
+    url: {
+      get: function() {
+        return defs.url;
+      }
+    },
+    method: {
+      get: function() {
+        return defs.method;
+      }
+    },
+    body: {
+      get: function() {
+        return defs.body;
+      }
+    }
+  });
 }
 
 function ResponseMock (defs = {}) {

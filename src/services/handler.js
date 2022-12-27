@@ -210,7 +210,10 @@ function isMethodIncluded (methods, reqMethod) {
 }
 
 function buildMiddlewareFromMapping (context, mapping) {
-  const { L, T, errorManager, errorBuilder, serviceSelector, tracelogService, sandboxConfig, schemaValidator } = context;
+  context = context || {};
+
+  const sandboxConfig = context.sandboxConfig || {};
+  const { L, T, errorManager, errorBuilder, serviceSelector, tracelogService, schemaValidator } = context;
 
   const timeout = mapping.timeout || sandboxConfig.defaultTimeout;
 
@@ -264,7 +267,7 @@ function buildMiddlewareFromMapping (context, mapping) {
       }));
     }
 
-    if (mapping.input.enabled !== false && mapping.input.preValidator) {
+    if (mapping.input && mapping.input.enabled !== false && mapping.input.preValidator) {
       promize = promize.then(function () {
         return applyValidator(mapping.input.preValidator, {
           errorBuilder: errorBuilder,
@@ -274,19 +277,19 @@ function buildMiddlewareFromMapping (context, mapping) {
     }
 
     promize = promize.then(function () {
-      if (mapping.input.enabled !== false && mapping.input.transform) {
+      if (mapping.input && mapping.input.enabled !== false && mapping.input.transform) {
         return mapping.input.transform(req, reqOpts, services);
       }
       return req.body;
     });
 
-    if (mapping.input.enabled !== false && mapping.input.mutate.rename) {
+    if (mapping.input && mapping.input.enabled !== false && mapping.input.mutate && mapping.input.mutate.rename) {
       promize = promize.then(function (reqData) {
         return mutateRenameFields(reqData, mapping.input.mutate.rename);
       });
     }
 
-    if (mapping.input.enabled !== false && mapping.input.postValidator) {
+    if (mapping.input && mapping.input.enabled !== false && mapping.input.postValidator) {
       promize = promize.then(function (reqData) {
         return applyValidator(mapping.input.postValidator, {
           errorBuilder: errorBuilder,
@@ -295,7 +298,7 @@ function buildMiddlewareFromMapping (context, mapping) {
       });
     }
 
-    if (mapping.inlet.process) {
+    if (mapping.inlet && mapping.inlet.process) {
       promize = promize.then(function (reqData) {
         return mapping.inlet.process(refMethod, res, reqData, reqOpts, services);
       });
@@ -306,7 +309,7 @@ function buildMiddlewareFromMapping (context, mapping) {
 
       promize = promize.then(function (result) {
         let packet;
-        if (mapping.output.enabled !== false && mapping.output.transform) {
+        if (mapping.output && mapping.output.enabled !== false && mapping.output.transform) {
           packet = mapping.output.transform(result, req, reqOpts, services);
           if (lodash.isEmpty(packet) || !("body" in packet)) {
             packet = { body: packet };
@@ -316,7 +319,7 @@ function buildMiddlewareFromMapping (context, mapping) {
         }
         packet = addDefaultHeaders(packet, responseOptions);
         // rename the fields
-        if (mapping.output.enabled !== false && mapping.output.mutate.rename) {
+        if (mapping.output && mapping.output.enabled !== false && mapping.output.mutate && mapping.output.mutate.rename) {
           packet = mutateRenameFields(packet, mapping.output.mutate.rename);
         }
         // Render the packet
@@ -345,7 +348,7 @@ function buildMiddlewareFromMapping (context, mapping) {
       promize = promize.catch(function (failed) {
         let packet = {};
         // transform error object to packet
-        if (mapping.error.enabled !== false && mapping.error.transform) {
+        if (mapping.error && mapping.error.enabled !== false && mapping.error.transform) {
           packet = mapping.error.transform(failed, req, reqOpts, services);
           packet = packet || {};
           packet.body = packet.body || {
@@ -362,11 +365,12 @@ function buildMiddlewareFromMapping (context, mapping) {
           }
         }
         // rename the fields
-        if (mapping.error.enabled !== false && mapping.error.mutate.rename) {
+        if (mapping.error && mapping.error.enabled !== false && mapping.error.mutate && mapping.error.mutate.rename) {
           packet = mutateRenameFields(packet, mapping.error.mutate.rename);
         }
         // Render the packet
-        renderPacketToResponse(packet, res.status(packet.statusCode || 500));
+        packet.statusCode = packet.statusCode || 500;
+        renderPacketToResponse(packet, res);
         L.has("error") && L.log("error", reqTR.add(packet).toMessage({
           text: "Req[${requestId}] has failed, status[${statusCode}], headers: ${headers}, body: ${body}"
         }));
@@ -378,13 +382,13 @@ function buildMiddlewareFromMapping (context, mapping) {
         }));
       });
 
-      return;
+      return promize;
     }
 
     promize = promize.catch(function (failed) {
       let packet = {};
       // apply the explicit transform function
-      if (mapping.error.enabled !== false && mapping.error.transform) {
+      if (mapping.error && mapping.error.enabled !== false && mapping.error.transform) {
         failed = mapping.error.transform(failed, req, reqOpts, services);
       }
       // transform error object to packet
@@ -397,11 +401,12 @@ function buildMiddlewareFromMapping (context, mapping) {
         packet = transformScalarError(failed, responseOptions, packet);
       }
       // rename the fields
-      if (mapping.error.enabled !== false && mapping.error.mutate.rename) {
+      if (mapping.error && mapping.error.enabled !== false && mapping.error.mutate && mapping.error.mutate.rename) {
         packet = mutateRenameFields(packet, mapping.error.mutate.rename);
       }
       // Render the packet
-      renderPacketToResponse(packet, res.status(packet.statusCode || 500));
+      packet.statusCode = packet.statusCode || 500;
+      renderPacketToResponse(packet, res);
       L.has("error") && L.log("error", reqTR.add(packet).toMessage({
         text: "Req[${requestId}] has failed, status[${statusCode}], headers: ${headers}, body: ${body}"
       }));
@@ -412,6 +417,8 @@ function buildMiddlewareFromMapping (context, mapping) {
         text: "Req[${requestId}] end"
       }));
     });
+
+    return promize;
   };
 }
 
@@ -455,7 +462,7 @@ function applyValidator (validator, defaultRef, reqData, reqOpts, services) {
 
 function addDefaultHeaders (packet, responseOptions) {
   packet.headers = packet.headers || {};
-  const headerName = responseOptions["returnCode"]["headerName"];
+  const headerName = responseOptions && responseOptions.returnCode && responseOptions.returnCode.headerName;
   if ((typeof headerName === "string") && !(headerName in packet.headers)) {
     packet.headers[headerName] = 0;
   }
