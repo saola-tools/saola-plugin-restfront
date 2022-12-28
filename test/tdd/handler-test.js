@@ -8,6 +8,8 @@ const LogConfig = devebot.require("logolite").LogConfig;
 const envcloak = require("envcloak").instance;
 const { assert, mockit, sinon } = require("liberica");
 
+const Fibonacci = require("../lib/fibonacci");
+
 const errorManager = {
   getErrorBuilder: function() {
     return errorBuilder;
@@ -733,7 +735,7 @@ describe("handler", function() {
       const serviceSelector = {
         lookupMethod: function(serviceName, methodName) {
           return {
-            method: "POST"
+            message: "This is an object - NOT A FUNCTION"
           }
         }
       };
@@ -905,7 +907,114 @@ describe("handler", function() {
       });
     });
 
-    it("service method is a promise function [error]");
+    for(const functionType of ["synchronous", "promise"]) {
+    it("full of successful flow in the " + functionType + " case", function() {
+      const serviceSelector = {
+        lookupMethod: function(serviceName, methodName) {
+          return {
+            method: function(data, opts) {
+              opts = opts || {};
+              if (!data.number || data.number < 0 || data.number > 50) {
+                return {
+                  input: data,
+                  message: "invalid input number"
+                };
+              }
+              const fibonacci = new Fibonacci(data);
+              const result = fibonacci.finish();
+              result.actionId = data.actionId;
+              if (functionType == "promise") {
+                return Promise.resolve(result);
+              }
+              return result;
+            }
+          }
+        }
+      };
+      const context = { ...ctx, serviceSelector };
+      const mapping = {
+        method: "GET",
+        input: {
+          transform: function (req, reqOpts, services) {
+            const result = { number: req.params.number };
+            if (functionType == "promise") {
+              return Promise.resolve(result);
+            }
+            return result;
+          },
+          postValidator: function (data, reqOpts, services) {
+            if (data && data.number >= 49) {
+              const result = {
+                valid: false,
+                errorName: "MaximumExceeding",
+                errors: [
+                  "Maximum input number exceeded"
+                ]
+              };
+              if (functionType == "promise") {
+                return Promise.resolve(result);
+              }
+              return result;
+            }
+            return true;
+          },
+        },
+        output: {
+          transform: function (result, req, reqOpts, services) {
+            if (functionType == "promise") {
+              return Promise.resolve(result);
+            }
+            return result;
+          }
+        }
+      };
+      const middleware = buildMiddlewareFromMapping(context, mapping);
+      assert.isFunction(middleware);
+      //
+      const req = new RequestMock({
+        method: "GET",
+        headers: {
+          "X-Request-Id": "BB529684-73F2-4222-BFD8-C6A1D786FA1C",
+        },
+        params: {
+          number: 27,
+        }
+      });
+      const res = new ResponseMock();
+      const next = sinon.stub();
+      const expected = {
+        body: { value: 196418, step: 27, number: 27, actionId: undefined },
+        headers: {}
+      };
+      //
+      const resultPromise = middleware(req, res, next);
+      assert.isNotNull(resultPromise);
+      //
+      return resultPromise.then(function(info) {
+        false && console.log("Output: ", info);
+        assert.deepEqual(info, expected);
+      }).catch(function(error) {
+        true && console.log("Error: ", error);
+        assert.fail("This testcase must not be raised");
+      }).finally(function() {
+        assert.equal(next.callCount, 0);
+        //
+        // check the res.status() call
+        assert.equal(res.status.callCount, 1);
+        const res_status_args = res.status.args[0];
+        assert.lengthOf(res_status_args, 1);
+        assert.equal(res_status_args[0], 200);
+        //
+        // check the res.json() call
+        assert.equal(res.json.callCount, 1);
+        const res_json_args = res.json.args[0];
+        false && console.log("res_json_args: ", res_json_args);
+        assert.lengthOf(res_json_args, 1);
+        const res_json_arg1 = res_json_args[0];
+        assert.deepEqual(res_json_arg1, expected.body);
+      });
+    });
+    }
 
     it("predefined error [error]");
 
@@ -1178,6 +1287,11 @@ function RequestMock (defs = {}) {
     method: {
       get: function() {
         return defs.method || "GET";
+      }
+    },
+    params: {
+      get: function() {
+        return defs.params || {};
       }
     },
     body: {
