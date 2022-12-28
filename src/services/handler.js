@@ -373,18 +373,8 @@ function buildMiddlewareFromMapping (context, mapping) {
   };
 }
 
-function mutateRenameFields (obj, nameMappings) {
-  if (nameMappings && lodash.isObject(nameMappings)) {
-    for (const oldName in nameMappings) {
-      const val = lodash.get(obj, oldName);
-      if (!lodash.isUndefined(val)) {
-        const newName = nameMappings[oldName];
-        lodash.unset(obj, oldName);
-        lodash.set(obj, newName, val);
-      }
-    }
-  }
-  return obj;
+function mutateRenameFields (data, nameMappings) {
+  return chores.renameJsonFields(data, nameMappings);
 }
 
 function applyValidator (validator, defaultRef, reqData, reqOpts, services) {
@@ -440,12 +430,17 @@ function transformErrorObject (error, responseOptions) {
       message: error.message
     }
   };
-  // responseOptions keys: X-Package-Ref & X-Return-Code
-  packet = transformResponseOptions(error, responseOptions, packet);
   // payload
   if (lodash.isObject(error.payload)) {
     packet.body.payload = error.payload;
   }
+  // Error.stack
+  if (chores.isDevelopmentMode()) {
+    packet.body.stack = lodash.split(error.stack, "\n");
+  }
+  // responseOptions keys: X-Package-Ref & X-Return-Code
+  packet = transformResponseOptions(error, responseOptions, packet);
+  //
   return packet;
 }
 
@@ -566,9 +561,6 @@ if (chores.isUpgradeSupported("optimization-mode")) {
 function transformScalarOrObjectError (failed, responseOptions, packet) {
   if (failed instanceof Error) {
     packet = transformErrorObject(failed, responseOptions);
-    if (chores.isDevelopmentMode()) {
-      packet.body.stack = lodash.split(failed.stack, "\n");
-    }
   } else {
     packet = transformScalarError(failed, responseOptions, packet);
   }
