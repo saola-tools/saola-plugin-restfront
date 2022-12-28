@@ -308,6 +308,7 @@ function buildMiddlewareFromMapping (context, mapping) {
         return refMethod(reqData, reqOpts);
       });
 
+      // transform the result
       if (mapping.output && mapping.output.enabled !== false && mapping.output.transform) {
         promize = promize.then(function (result) {
           return mapping.output.transform(result, req, reqOpts, services);
@@ -331,7 +332,7 @@ function buildMiddlewareFromMapping (context, mapping) {
         });
       }
 
-      // Render the packet
+      // render the packet
       promize = promize.then(function (packet) {
         renderPacketToResponse(packet, res);
         //

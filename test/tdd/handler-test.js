@@ -3,16 +3,28 @@
 const devebot = require("devebot");
 const Promise = devebot.require("bluebird");
 const lodash = devebot.require("lodash");
+const chores = devebot.require("chores");
 const LogConfig = devebot.require("logolite").LogConfig;
 const envcloak = require("envcloak").instance;
 const { assert, mockit, sinon } = require("liberica");
-const path = require("path");
+
+const errorManager = {
+  getErrorBuilder: function() {
+    return errorBuilder;
+  }
+};
+
+const errorBuilder = {
+  newError: function(name, options) {
+    options = options || {};
+    const err = new Error(options.message);
+    err.name = name;
+    err.payload = options.payload;
+    return err;
+  }
+}
 
 describe("handler", function() {
-  // const app = require(path.join(__dirname, '../app/example'));
-  // const sandboxConfig = lodash.get(app.config, ['sandbox', 'default', 'plugins', 'appRestfront']);
-  // console.log(JSON.stringify(sandboxConfig, null, 2));
-  //
   const sandboxConfig = {
     "contextPath": "/restfront",
     "apiPath": "rest",
@@ -675,19 +687,6 @@ describe("handler", function() {
         }
       }
     };
-    const errorBuilder = {
-      newError: function(name, options) {
-        const err = new Error();
-        err.name = name;
-        err.payload = options && options.payload;
-        return err;
-      }
-    };
-    const errorManager = {
-      getErrorBuilder: function() {
-        return errorBuilder;
-      }
-    };
     const tracelogService = {
       getRequestId: function(req) {
         return "ADD7D6E0-0736-4B79-98C6-2F0EAE0D671C";
@@ -924,7 +923,7 @@ describe("handler", function() {
       };
       const result = transformErrorObject(error, sandboxConfig.responseOptions);
       false && console.log(JSON.stringify(result, null, 2));
-      assert.deepEqual(result, expected);
+      assert.deepEqual(lodash.omit(result, ["body.stack"]), expected);
     });
   });
 
@@ -1098,6 +1097,42 @@ describe("handler", function() {
 
     it("Return 'true' if reqMethod matchs some support methods", function() {
       assert.isTrue(isMethodIncluded(["GET", "post"], "Get"));
+    });
+  });
+
+  describe("transformErrorToPacket", function() {
+    let Handler, transformErrorToPacket;
+
+    beforeEach(function() {
+      chores.setEnvironments({
+        DEVEBOT_ENV: "development",
+        DEVEBOT_UPGRADE_ENABLED: "app-restfront-legacy-error-to-response",
+      });
+      Handler = mockit.acquire("handler", { libraryDir: "../lib" });
+      transformErrorToPacket = mockit.get(Handler, "transformErrorToPacket");
+    });
+
+    afterEach(function() {
+      chores.clearCache();
+    });
+
+    it("Return a 500 error with an empty mapping", function() {
+      const mapping = {};
+      const req = new RequestMock({
+        method: "GET"
+      });
+      const reqOpts = {};
+      const services = {};
+      const failed = errorBuilder.newError("ObjectNotFound", {
+        message: "The searching returns an empty result",
+        payload: {
+          q: "hello"
+        }
+      });
+      const responseOptions = sandboxConfig.responseOptions;
+      //
+      const packet = transformErrorToPacket(failed, mapping, req, reqOpts, services, responseOptions);
+      false && console.log(JSON.stringify(packet, null, 2));
     });
   });
 });
