@@ -530,6 +530,8 @@ function extractRequestOptions (req, requestOptions, opts = {}, errors) {
   return result;
 }
 
+//-------------------------------------------------------------------------------------------------
+
 function renderPacketToResponse_Standard (packet = {}, res) {
   if (lodash.isObject(packet.headers)) {
     lodash.forOwn(packet.headers, function (value, key) {
@@ -572,6 +574,8 @@ let renderPacketToResponse = renderPacketToResponse_Standard;
 if (chores.isUpgradeSupported("optimization-mode")) {
   renderPacketToResponse = renderPacketToResponse_Optimized;
 }
+
+//-------------------------------------------------------------------------------------------------
 
 function transformScalarOrObjectError (failed, responseOptions, packet) {
   if (failed instanceof Error) {

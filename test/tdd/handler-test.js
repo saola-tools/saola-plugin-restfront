@@ -682,7 +682,7 @@ describe("handler", function() {
       lookupMethod: function(serviceName, methodName) {
         return {
           method: function(reqData, reqOpts) {
-            return {}
+            return reqData;
           }
         }
       }
@@ -715,7 +715,7 @@ describe("handler", function() {
       LogConfig.reset();
     });
 
-    it("call the next() if the HTTP method is mismatched", function() {
+    it("call the next() if the HTTP method mismatchs with the mapping", function() {
       const context = { ...ctx };
       const mapping = {};
       const middleware = buildMiddlewareFromMapping(context, mapping);
@@ -759,9 +759,20 @@ describe("handler", function() {
       const req = { method: "GET" };
       const res = new ResponseMock();
       const next = sinon.stub();
-      middleware(req, res, next);
       //
-      assert.equal(next.callCount, 0);
+      const expected = { body: undefined, headers: {} };
+      const resultPromise = middleware(req, res, next);
+      assert.isNotNull(resultPromise);
+      //
+      return resultPromise.then(function(info) {
+        false && console.log("Output: ", info);
+        assert.deepEqual(info, expected);
+      }).catch(function(error) {
+        true && console.log("Error: ", error);
+        assert.fail("This testcase must not be raised");
+      }).finally(function() {
+        assert.equal(next.callCount, 0);
+      });
     });
 
     it("Invoke a HTTP request to middleware with input/output data transformation and renaming fields", function() {
@@ -802,16 +813,26 @@ describe("handler", function() {
       });
       const res = new ResponseMock();
       const next = sinon.stub();
+      const expected = {
+        body: {
+          email: 'john.doe@gmail.com',
+          phoneNumber: '+84962306028',
+          fullname: 'John Doe'
+        },
+        headers: {}
+      };
       const resultPromise = middleware(req, res, next);
       //
       assert.isNotNull(resultPromise);
       //
       return resultPromise.then(function(info) {
         false && console.log("Output: ", info);
-        return info;
+        assert.deepEqual(info, expected);
       }).catch(function(error) {
-        false && console.log("Error: ", error);
-        throw error;
+        true && console.log("Error: ", error);
+        assert.fail("This testcase must not be raised");
+      }).finally(function() {
+        assert.equal(next.callCount, 0);
       });
     });
 
@@ -847,7 +868,7 @@ describe("handler", function() {
       assert.isNotNull(resultPromise);
       //
       return resultPromise.then(function(info) {
-        false && console.log("Output: ", info);
+        true && console.log("Output: ", info);
         assert.fail("This testcase must raise a timeout Error");
       }).catch(function(error) {
         false && console.log("Error: ", error);
@@ -876,7 +897,7 @@ describe("handler", function() {
       assert.isNotNull(resultPromise);
       //
       return resultPromise.then(function(info) {
-        false && console.log("Output: ", info);
+        true && console.log("Output: ", info);
         assert.fail("This testcase must raise a string Error");
       }).catch(function(error) {
         false && console.log("Error: ", error);
