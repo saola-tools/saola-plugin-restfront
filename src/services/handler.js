@@ -274,12 +274,15 @@ function buildMiddlewareFromMapping (context, mapping) {
       });
     }
 
-    promize = promize.then(function () {
-      if (mapping.input && mapping.input.enabled !== false && mapping.input.transform) {
+    if (mapping.input && mapping.input.enabled !== false && mapping.input.transform) {
+      promize = promize.then(function () {
         return mapping.input.transform(req, reqOpts, services);
-      }
-      return req.body;
-    });
+      });
+    } else {
+      promize = promize.then(function () {
+        return req.body;
+      });
+    }
 
     if (mapping.input && mapping.input.enabled !== false && mapping.input.mutate && mapping.input.mutate.rename) {
       promize = promize.then(function (reqData) {
@@ -305,26 +308,38 @@ function buildMiddlewareFromMapping (context, mapping) {
         return refMethod(reqData, reqOpts);
       });
 
-      promize = promize.then(function (result) {
-        let packet;
-        if (mapping.output && mapping.output.enabled !== false && mapping.output.transform) {
-          packet = mapping.output.transform(result, req, reqOpts, services);
+      if (mapping.output && mapping.output.enabled !== false && mapping.output.transform) {
+        promize = promize.then(function (result) {
+          return mapping.output.transform(result, req, reqOpts, services);
+        }).then(function (packet) {
           if (lodash.isEmpty(packet) || !("body" in packet)) {
             packet = { body: packet };
           }
-        } else {
-          packet = { body: result };
-        }
-        packet = addDefaultHeaders(packet, responseOptions);
-        // rename the fields
-        if (mapping.output && mapping.output.enabled !== false && mapping.output.mutate && mapping.output.mutate.rename) {
-          packet = mutateRenameFields(packet, mapping.output.mutate.rename);
-        }
-        // Render the packet
+          return addDefaultHeaders(packet, responseOptions);
+        });
+      } else {
+        promize = promize.then(function (result) {
+          let packet = { body: result };
+          return addDefaultHeaders(packet, responseOptions);
+        });
+      }
+
+      // rename the fields
+      if (mapping.output && mapping.output.enabled !== false && mapping.output.mutate && mapping.output.mutate.rename) {
+        promize = promize.then(function (packet) {
+          return mutateRenameFields(packet, mapping.output.mutate.rename);
+        });
+      }
+
+      // Render the packet
+      promize = promize.then(function (packet) {
         renderPacketToResponse(packet, res);
-        L.has("trace") && L.log("trace", reqTR.add(packet).toMessage({
+        //
+        L.has("trace") && L.log("trace", reqTR.toMessage({
           text: "Req[${requestId}] is completed"
         }));
+        //
+        return packet;
       });
     }
 
@@ -378,8 +393,7 @@ function mutateRenameFields (data, nameMappings) {
 }
 
 function applyValidator (validator, defaultRef, reqData, reqOpts, services) {
-  return Promise.resolve(validator(reqData, reqOpts, services))
-  .then(function (result) {
+  return Promise.resolve(validator(reqData, reqOpts, services)).then(function (result) {
     if (!isPureObject(result)) {
       result = { valid: result };
     }
