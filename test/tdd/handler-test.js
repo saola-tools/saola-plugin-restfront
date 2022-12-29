@@ -550,12 +550,12 @@ describe("handler", function() {
     });
   });
 
-  describe("addDefaultHeaders()", function() {
-    let Handler, addDefaultHeaders;
+  describe("addDefaultResponseHeaders()", function() {
+    let Handler, addDefaultResponseHeaders;
 
     beforeEach(function() {
       Handler = mockit.acquire("handler", { libraryDir: "../lib" });
-      addDefaultHeaders = mockit.get(Handler, "addDefaultHeaders");
+      addDefaultResponseHeaders = mockit.get(Handler, "addDefaultResponseHeaders");
     });
 
     it("add the default header to the packet", function() {
@@ -564,7 +564,7 @@ describe("handler", function() {
           message: "Hello world"
         }
       };
-      const output = addDefaultHeaders(packet, sandboxConfig.responseOptions);
+      const output = addDefaultResponseHeaders(packet, sandboxConfig.responseOptions);
       assert.deepEqual(output, {
         headers: {
           "X-Return-Code": 0
@@ -584,7 +584,7 @@ describe("handler", function() {
           message: "Hello world"
         }
       };
-      const output = addDefaultHeaders(packet, sandboxConfig.responseOptions);
+      const output = addDefaultResponseHeaders(packet, sandboxConfig.responseOptions);
       assert.deepEqual(output, {
         headers: {
           "X-Return-Code": 1

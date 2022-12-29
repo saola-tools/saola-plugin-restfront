@@ -316,12 +316,12 @@ function buildMiddlewareFromMapping (context, mapping) {
           if (lodash.isEmpty(packet) || !("body" in packet)) {
             packet = { body: packet };
           }
-          return addDefaultHeaders(packet, responseOptions);
+          return addDefaultResponseHeaders(packet, responseOptions);
         });
       } else {
         promize = promize.then(function (result) {
           let packet = { body: result };
-          return addDefaultHeaders(packet, responseOptions);
+          return addDefaultResponseHeaders(packet, responseOptions);
         });
       }
 
@@ -416,7 +416,7 @@ function applyValidator (validator, defaultRef, reqData, reqOpts, services) {
   });
 }
 
-function addDefaultHeaders (packet, responseOptions) {
+function addDefaultResponseHeaders (packet, responseOptions) {
   packet.headers = packet.headers || {};
   const headerName = responseOptions && responseOptions.returnCode && responseOptions.returnCode.headerName;
   if ((typeof headerName === "string") && !(headerName in packet.headers)) {
@@ -425,7 +425,7 @@ function addDefaultHeaders (packet, responseOptions) {
   return packet;
 }
 
-function transformResponseOptions (error, responseOptions = {}, packet = {}) {
+function extractErrorResponseHeaders (error, responseOptions = {}, packet = {}) {
   packet.headers = packet.headers || {};
   lodash.forOwn(responseOptions, function(resOpt = {}, optionName) {
     if (optionName in error && lodash.isString(resOpt.headerName)) {
@@ -454,7 +454,7 @@ function transformErrorObject (error, responseOptions) {
     packet.body.stack = lodash.split(error.stack, "\n");
   }
   // responseOptions keys: X-Package-Ref & X-Return-Code
-  packet = transformResponseOptions(error, responseOptions, packet);
+  packet = extractErrorResponseHeaders(error, responseOptions, packet);
   //
   return packet;
 }
@@ -482,7 +482,7 @@ function transformScalarError (error, responseOptions = {}, packet = {}) {
     if (lodash.isNil(packet.body)) {
       packet.body = lodash.omit(error, ERROR_FIELDS.concat(lodash.keys(responseOptions)));
     }
-    packet = transformResponseOptions(error, responseOptions, packet);
+    packet = extractErrorResponseHeaders(error, responseOptions, packet);
   } else {
     packet.body = {
       type: (typeof error),
