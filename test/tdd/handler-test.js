@@ -10,7 +10,7 @@ const { assert, mockit, sinon } = require("liberica");
 
 const Fibonacci = require("../lib/fibonacci");
 const { RequestMock, ResponseMock } = require("../lib/expresso");
-const { validateMiddlewareStubs, validateMiddlewareFlow } = require("../lib/expresso");
+const { validateMiddlewareFlow } = require("../lib/expresso");
 
 const errorManager = {
   getErrorBuilder: function() {
@@ -26,7 +26,7 @@ const errorBuilder = {
     err.payload = options.payload;
     return err;
   }
-}
+};
 
 describe("handler", function() {
   const sandboxConfig = {
@@ -109,13 +109,6 @@ describe("handler", function() {
   };
 
   describe("sanitizeMappings()", function() {
-    const loggingFactory = mockit.createLoggingFactoryMock({ captureMethodCall: false });
-    const ctx = {
-      L: loggingFactory.getLogger(),
-      T: loggingFactory.getTracer(),
-      blockRef: "app-restfront/handler",
-    };
-
     let Handler, sanitizeMappings;
 
     beforeEach(function() {
@@ -279,7 +272,7 @@ describe("handler", function() {
     });
 
     it("Initialize a standard mappings structure when the input is an empty object", function() {
-      const mapping = {}
+      const mapping = {};
       const expected = {
         "input": {
           "mutate": {}
@@ -345,7 +338,7 @@ describe("handler", function() {
         phoneNumber: "+84972508126",
         age: 27,
         gender: true
-      }
+      };
     });
 
     it("do nothing if nameMappings is undefined", function() {
@@ -368,7 +361,7 @@ describe("handler", function() {
       const mappings = {
         "name": "fullname",
         "phoneNumber": "phone.number"
-      }
+      };
       const expected = {
         fullname: "Hello, world",
         phone: {
@@ -376,7 +369,7 @@ describe("handler", function() {
         },
         age: 27,
         gender: true
-      }
+      };
       assert.deepEqual(mutateRenameFields(dataObject, mappings), expected);
     });
   });
@@ -413,7 +406,7 @@ describe("handler", function() {
     });
 
     it("convert the requestOption from string type to an object", function() {
-      const output = extractRequestOptions(req, { "requestId": "X-Request-Id"} );
+      const output = extractRequestOptions(req, { "requestId": "X-Request-Id" } );
       false && console.log(JSON.stringify(output, null, 2));
       const expected = {
         "requestId": "52160bbb-cac5-405f-a1e9-a55323b17938",
@@ -598,7 +591,7 @@ describe("handler", function() {
     });
   });
 
-  for (const [index, label] of ["Standard", "Optimized"].entries()) {
+  for (const label of ["Standard", "Optimized"]) {
     describe("renderPacketToResponse_" + label + "()", function() {
       let Handler, renderPacketToResponse;
 
@@ -688,7 +681,7 @@ describe("handler", function() {
           method: function(reqData, reqOpts) {
             return reqData;
           }
-        }
+        };
       }
     };
     const tracelogService = {
@@ -720,7 +713,7 @@ describe("handler", function() {
     });
 
     it("call the next() if the HTTP method mismatchs with the mapping", function() {
-      const context = { ...ctx };
+      const context = lodash.merge({}, ctx);
       const mapping = {};
       const middleware = buildMiddlewareFromMapping(context, mapping);
       assert.isFunction(middleware);
@@ -738,10 +731,10 @@ describe("handler", function() {
         lookupMethod: function(serviceName, methodName) {
           return {
             message: "This is an object - NOT A FUNCTION"
-          }
+          };
         }
       };
-      const context = { ...ctx, serviceSelector };
+      const context = lodash.merge({}, ctx, { serviceSelector });
       const mapping = { method: "GET" };
       const middleware = buildMiddlewareFromMapping(context, mapping);
       assert.isFunction(middleware);
@@ -755,7 +748,7 @@ describe("handler", function() {
     });
 
     it("Invoke a HTTP request to middleware with minimal default parameters", function() {
-      const context = { ...ctx };
+      const context = lodash.merge({}, ctx);
       const mapping = { method: "GET" };
       const middleware = buildMiddlewareFromMapping(context, mapping);
       assert.isFunction(middleware);
@@ -785,7 +778,7 @@ describe("handler", function() {
     });
 
     it("Invoke a HTTP request to middleware with input/output data transformation and renaming fields", function() {
-      const context = { ...ctx };
+      const context = lodash.merge({}, ctx);
       const mapping = {
         method: "GET",
         input: {
@@ -824,9 +817,9 @@ describe("handler", function() {
       const next = sinon.stub();
       const expected = {
         body: {
-          email: 'john.doe@gmail.com',
-          phoneNumber: '+84962306028',
-          fullname: 'John Doe'
+          email: "john.doe@gmail.com",
+          phoneNumber: "+84962306028",
+          fullname: "John Doe"
         },
         headers: {
           "X-Return-Code": 0
@@ -847,7 +840,7 @@ describe("handler", function() {
       });
     });
 
-    for(const functionType of ["synchronous", "promise"]) {
+    for (const functionType of ["synchronous", "promise"]) {
     it("full of successful flow in the " + functionType + " case", function() {
       const serviceSelector = {
         lookupMethod: function(serviceName, methodName) {
@@ -868,10 +861,10 @@ describe("handler", function() {
               }
               return result;
             }
-          }
+          };
         }
       };
-      const context = { ...ctx, serviceSelector };
+      const context = lodash.merge({}, ctx, { serviceSelector });
       const mapping = {
         method: "GET",
         input: {
@@ -917,7 +910,7 @@ describe("handler", function() {
                 "X-Power-By": "restfront"
               },
               body: result
-            }
+            };
             if (functionType == "promise") {
               return Promise.resolve(packet);
             }
@@ -973,8 +966,8 @@ describe("handler", function() {
             set: {
               total: 3,
               args: [
-                [ 'X-Request-Id', 'ADD7D6E0-0736-4B79-98C6-2F0EAE0D671C' ],
-                [ 'X-Power-By', 'restfront' ]
+                [ "X-Request-Id", "ADD7D6E0-0736-4B79-98C6-2F0EAE0D671C" ],
+                [ "X-Power-By", "restfront" ]
               ]
             },
             json: {
@@ -1079,7 +1072,7 @@ describe("handler", function() {
     });
 
     it("render a failed response when the processing time exceeds the timeout", function() {
-      const context = { ...ctx };
+      const context = lodash.merge({}, ctx);
       const mapping = {
         method: "GET",
         inlet: {
@@ -1119,7 +1112,7 @@ describe("handler", function() {
     });
 
     it("service method is a normal function, but it raises a string based error", function() {
-      const context = { ...ctx };
+      const context = lodash.merge({}, ctx);
       const mapping = {
         method: "GET",
         inlet: {
@@ -1185,13 +1178,6 @@ describe("handler", function() {
   });
 
   describe("transformScalarError()", function() {
-    const loggingFactory = mockit.createLoggingFactoryMock({ captureMethodCall: false });
-    const ctx = {
-      L: loggingFactory.getLogger(),
-      T: loggingFactory.getTracer(),
-      blockRef: "app-restfront/handler",
-    };
-
     let Handler, transformScalarError;
 
     beforeEach(function() {
