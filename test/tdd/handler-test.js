@@ -9,6 +9,8 @@ const envcloak = require("envcloak").instance;
 const { assert, mockit, sinon } = require("liberica");
 
 const Fibonacci = require("../lib/fibonacci");
+const { RequestMock, ResponseMock } = require("../lib/expresso");
+const { validateMiddlewareStubs, validateMiddlewareFlow } = require("../lib/expresso");
 
 const errorManager = {
   getErrorBuilder: function() {
@@ -937,7 +939,10 @@ describe("handler", function() {
       });
       const res = new ResponseMock();
       const next = sinon.stub();
-      const expected = {
+      //
+      const resultPromise = middleware(req, res, next);
+      //
+      const tuple = {
         headers: {
           "X-Request-Id": "ADD7D6E0-0736-4B79-98C6-2F0EAE0D671C",
           "X-Power-By": "restfront",
@@ -950,44 +955,103 @@ describe("handler", function() {
           requestId: "ADD7D6E0-0736-4B79-98C6-2F0EAE0D671C"
         }
       };
-      //
-      const resultPromise = middleware(req, res, next);
-      assert.isNotNull(resultPromise);
-      //
-      return resultPromise.then(function(info) {
-        false && console.log("Output: ", info);
-        assert.deepEqual(info, expected);
-      }).catch(function(error) {
-        true && console.log("Error: ", error);
-        assert.fail("This testcase must not be raised");
-      }).finally(function() {
-        assert.equal(next.callCount, 0);
-        //
-        // check the res.status() call
-        assert.equal(res.status.callCount, 1);
-        const res_status_args = res.status.args[0];
-        assert.lengthOf(res_status_args, 1);
-        assert.equal(res_status_args[0], 200);
-        //
-        // check the res.set() call
-        assert.equal(res.set.callCount, 3);
-        false && console.log("res_set_args: ", res.set.args);
-        assert.sameMembers(res.set.args[0], [ 'X-Request-Id', 'ADD7D6E0-0736-4B79-98C6-2F0EAE0D671C' ]);
-        assert.sameMembers(res.set.args[1], [ 'X-Power-By', 'restfront' ]);
-        //
-        // check the res.json() call
-        assert.equal(res.json.callCount, 1);
-        const res_json_args = res.json.args[0];
-        false && console.log("res_json_args: ", res_json_args);
-        assert.lengthOf(res_json_args, 1);
-        const res_json_arg1 = res_json_args[0];
-        assert.deepEqual(res_json_arg1, expected.body);
+      return validateMiddlewareFlow(req, res, next, resultPromise, {
+        failed: false,
+        tuple: tuple,
+        error: undefined,
+        stubs: {
+          next: {
+            total: 0
+          },
+          res: {
+            status: {
+              total: 1,
+              args: [
+                [ 200 ]
+              ]
+            },
+            set: {
+              total: 3,
+              args: [
+                [ 'X-Request-Id', 'ADD7D6E0-0736-4B79-98C6-2F0EAE0D671C' ],
+                [ 'X-Power-By', 'restfront' ]
+              ]
+            },
+            json: {
+              total: 1,
+              args: [
+                [ tuple.body ]
+              ]
+            }
+          }
+        }
       });
     });
     }
 
     it("render a failed response when the required request options are absent", function() {
-      this.skip();
+      const context = lodash.merge({}, ctx, {
+        "sandboxConfig": {
+          "requestOptions": {
+            "requestId": {
+              "required": true
+            },
+            "platformApp": {
+              "required": true
+            }
+          }
+        }
+      });
+      const mapping = { method: "GET" };
+      const middleware = buildMiddlewareFromMapping(context, mapping);
+      assert.isFunction(middleware);
+      //
+      const req = new RequestMock({ method: "GET" });
+      const res = new ResponseMock();
+      const next = sinon.stub();
+      //
+      const resultPromise = middleware(req, res, next);
+      //
+      return validateMiddlewareFlow(req, res, next, resultPromise, {
+        failed: true,
+        tuple: undefined,
+        error: {
+          name: "RequestOptionNotFound",
+          payload: {
+            requestOptions: [ "requestId", "platformApp" ]
+          }
+        },
+        stubs: {
+          next: {
+            total: 0
+          },
+          res: {
+            status: {
+              total: 1,
+              args: [
+                [ 500 ]
+              ]
+            },
+            set: {
+              total: 0,
+            },
+            json: {
+              total: 1,
+              args: [
+                [
+                  {
+                    name: "RequestOptionNotFound",
+                    payload: {
+                      requestOptions: [ "requestId", "platformApp" ]
+                    },
+                    message: "",
+                  }
+                ]
+              ]
+            }
+          }
+        }
+      });
     });
 
     it("render a failed response when the mapping.input.preValidator returns false", function() {
@@ -998,11 +1062,19 @@ describe("handler", function() {
       this.skip();
     });
 
-    it("render a failed response when the mapping.input.postValidator returns false", function() {
+    it("render a failed response when the mapping.input.transform raises an Error", function() {
       this.skip();
     });
 
     it("render a failed response when the mapping.input.postValidator raises an Error", function() {
+      this.skip();
+    });
+
+    it("render a failed response when the mapping.input.postValidator returns false", function() {
+      this.skip();
+    });
+
+    it("render a failed response when the mapping.output.transform raises an Error", function() {
       this.skip();
     });
 
@@ -1321,46 +1393,3 @@ describe("handler", function() {
     });
   });
 });
-
-function RequestMock (defs = {}) {
-  const store = { };
-
-  store.headers = lodash.mapKeys(defs.headers, function(value, key) {
-    return lodash.lowerCase(key);
-  });
-
-  this.get = function(name) {
-    return store.headers[lodash.lowerCase(name)];
-  };
-
-  Object.defineProperties(this, {
-    url: {
-      get: function() {
-        return defs.url;
-      }
-    },
-    method: {
-      get: function() {
-        return defs.method || "GET";
-      }
-    },
-    params: {
-      get: function() {
-        return defs.params || {};
-      }
-    },
-    body: {
-      get: function() {
-        return defs.body;
-      }
-    }
-  });
-}
-
-function ResponseMock (defs = {}) {
-  this.set = sinon.stub();
-  this.status = sinon.stub();
-  this.send = sinon.stub();
-  this.json = sinon.stub();
-  this.end = sinon.stub();
-}

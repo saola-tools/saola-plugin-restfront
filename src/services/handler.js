@@ -221,7 +221,7 @@ function buildMiddlewareFromMapping (context, mapping) {
   const refMethod = ref && ref.method;
 
   const requestOptions = lodash.merge({}, sandboxConfig.requestOptions, mapping.requestOptions);
-  const responseOptions = Object.assign({}, sandboxConfig.responseOptions, mapping.responseOptions);
+  const responseOptions = lodash.merge({}, sandboxConfig.responseOptions, mapping.responseOptions);
 
   const mappingErrorBuilder = errorManager.getErrorBuilder(mapping.errorSource) || errorBuilder;
 
