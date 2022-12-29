@@ -97,13 +97,15 @@ function validateMiddlewareStubs (req, res, next, expected) {
   if ("next" in expected) {
     assertSinonStub(next, expected["next"]);
   }
-  for (const stubName of ["status", "set", "json", "send", "end"]) {
-    if (stubName in expected.res) {
-      try {
-        assertSinonStub(res[stubName], expected.res[stubName]);
-      } catch (err) {
-        console.log("stub: %s", stubName);
-        console.log("error: %O", err);
+  if (lodash.isPlainObject(expected.res)) {
+    for (const stubName of ["status", "set", "json", "send", "end"]) {
+      if (stubName in expected.res) {
+        try {
+          assertSinonStub(res[stubName], expected.res[stubName]);
+        } catch (err) {
+          console.log("stub: %s", stubName);
+          console.log("error: %O", err);
+        }
       }
     }
   }
@@ -129,10 +131,14 @@ function validateMiddlewareFlow (req, res, next, flow, expected) {
     !silent && !failed && console.log("Error: ", actualError);
     const { error: expectedError } = expected;
     if (expectedError !== undefined) {
-      for (const field of ["name", "message", "payload"]) {
-        if (field in expectedError) {
-          assert.deepEqual(actualError[field], expectedError[field]);
+      if (expectedError && lodash.isObject(expectedError)) {
+        for (const field of ["name", "message", "payload"]) {
+          if (field in expectedError) {
+            assert.deepEqual(actualError[field], expectedError[field]);
+          }
         }
+      } else {
+        assert.equal(actualError, expectedError);
       }
     }
     if (!failed) {

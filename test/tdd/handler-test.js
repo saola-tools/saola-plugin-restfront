@@ -4,8 +4,6 @@ const devebot = require("devebot");
 const Promise = devebot.require("bluebird");
 const lodash = devebot.require("lodash");
 const chores = devebot.require("chores");
-const LogConfig = devebot.require("logolite").LogConfig;
-const envcloak = require("envcloak").instance;
 const { assert, mockit, sinon } = require("liberica");
 
 const Fibonacci = require("../lib/fibonacci");
@@ -699,17 +697,15 @@ describe("handler", function() {
     let Handler, buildMiddlewareFromMapping;
 
     beforeEach(function() {
-      envcloak.setup({
+      chores.setEnvironments({
         DEVEBOT_ENV: "development"
       });
-      LogConfig.reset();
       Handler = mockit.acquire("handler", { libraryDir: "../lib" });
       buildMiddlewareFromMapping = mockit.get(Handler, "buildMiddlewareFromMapping");
     });
 
     afterEach(function() {
-      envcloak.reset();
-      LogConfig.reset();
+      chores.clearCache();
     });
 
     it("call the next() if the HTTP method mismatchs with the mapping", function() {
@@ -721,9 +717,18 @@ describe("handler", function() {
       const req = new RequestMock({});
       const res = new ResponseMock();
       const next = sinon.stub();
-      middleware(req, res, next);
+      const resultPromise = middleware(req, res, next);
       //
-      assert.equal(next.callCount, 1);
+      return validateMiddlewareFlow(req, res, next, resultPromise, {
+        failed: false,
+        tuple: undefined,
+        error: undefined,
+        stubs: {
+          next: {
+            total: 1
+          }
+        }
+      });
     });
 
     it("call the next() if the service method is not a function", function() {
@@ -742,9 +747,18 @@ describe("handler", function() {
       const req = new RequestMock({ method: "GET" });
       const res = new ResponseMock();
       const next = sinon.stub();
-      middleware(req, res, next);
+      const resultPromise = middleware(req, res, next);
       //
-      assert.equal(next.callCount, 1);
+      return validateMiddlewareFlow(req, res, next, resultPromise, {
+        failed: false,
+        tuple: undefined,
+        error: undefined,
+        stubs: {
+          next: {
+            total: 1
+          }
+        }
+      });
     });
 
     it("Invoke a HTTP request to middleware with minimal default parameters", function() {
@@ -757,23 +771,25 @@ describe("handler", function() {
       const res = new ResponseMock();
       const next = sinon.stub();
       //
-      const expected = {
-        body: undefined,
-        headers: {
-          "X-Return-Code": 0
-        }
-      };
       const resultPromise = middleware(req, res, next);
-      assert.isNotNull(resultPromise);
       //
-      return resultPromise.then(function(info) {
-        false && console.log("Output: ", info);
-        assert.deepEqual(info, expected);
-      }).catch(function(error) {
-        true && console.log("Error: ", error);
-        assert.fail("This testcase must not be raised");
-      }).finally(function() {
-        assert.equal(next.callCount, 0);
+      return validateMiddlewareFlow(req, res, next, resultPromise, {
+        failed: false,
+        tuple: {
+          body: undefined,
+          headers: {
+            "X-Return-Code": 0
+          }
+        },
+        error: undefined,
+        stubs: {
+          next: {
+            total: 0
+          },
+          json: {
+            total: 1
+          }
+        }
       });
     });
 
@@ -815,28 +831,30 @@ describe("handler", function() {
       });
       const res = new ResponseMock();
       const next = sinon.stub();
-      const expected = {
-        body: {
-          email: "john.doe@gmail.com",
-          phoneNumber: "+84962306028",
-          fullname: "John Doe"
-        },
-        headers: {
-          "X-Return-Code": 0
-        }
-      };
+      //
       const resultPromise = middleware(req, res, next);
       //
-      assert.isNotNull(resultPromise);
-      //
-      return resultPromise.then(function(info) {
-        false && console.log("Output: ", info);
-        assert.deepEqual(info, expected);
-      }).catch(function(error) {
-        true && console.log("Error: ", error);
-        assert.fail("This testcase must not be raised");
-      }).finally(function() {
-        assert.equal(next.callCount, 0);
+      return validateMiddlewareFlow(req, res, next, resultPromise, {
+        failed: false,
+        tuple: {
+          body: {
+            email: "john.doe@gmail.com",
+            phoneNumber: "+84962306028",
+            fullname: "John Doe"
+          },
+          headers: {
+            "X-Return-Code": 0
+          }
+        },
+        error: undefined,
+        stubs: {
+          next: {
+            total: 0
+          },
+          json: {
+            total: 1
+          }
+        }
       });
     });
 
@@ -1100,14 +1118,38 @@ describe("handler", function() {
       const next = sinon.stub();
       const resultPromise = middleware(req, res, next);
       //
-      assert.isNotNull(resultPromise);
-      //
-      return resultPromise.then(function(info) {
-        true && console.log("Output: ", info);
-        assert.fail("This testcase must raise a timeout Error");
-      }).catch(function(error) {
-        false && console.log("Error: ", error);
-        assert.equal(error.name, "RequestTimeoutOnServer");
+      return validateMiddlewareFlow(req, res, next, resultPromise, {
+        failed: true,
+        tuple: undefined,
+        error: {
+          name: "RequestTimeoutOnServer",
+        },
+        stubs: {
+          next: {
+            total: 0
+          },
+          res: {
+            status: {
+              total: 1,
+              args: [
+                [ 500 ]
+              ]
+            },
+            set: {
+              total: 0,
+            },
+            json: {
+              total: 1,
+              args: [
+                [
+                  {
+                    name: "RequestTimeoutOnServer",
+                  }
+                ]
+              ]
+            }
+          }
+        }
       });
     });
 
@@ -1127,16 +1169,37 @@ describe("handler", function() {
       const req = new RequestMock();
       const res = new ResponseMock();
       const next = sinon.stub();
+      //
       const resultPromise = middleware(req, res, next);
       //
-      assert.isNotNull(resultPromise);
-      //
-      return resultPromise.then(function(info) {
-        true && console.log("Output: ", info);
-        assert.fail("This testcase must raise a string Error");
-      }).catch(function(error) {
-        false && console.log("Error: ", error);
-        assert.equal(error, "Error in string type");
+      return validateMiddlewareFlow(req, res, next, resultPromise, {
+        failed: true,
+        tuple: undefined,
+        error: "Error in string type",
+        stubs: {
+          next: {
+            total: 0
+          },
+          res: {
+            status: {
+              total: 1,
+              args: [
+                [ 500 ]
+              ]
+            },
+            set: {
+              total: 0,
+            },
+            json: {
+              total: 1,
+              args: [
+                [
+                  { type: "string", message: "Error in string type" }
+                ]
+              ]
+            }
+          }
+        }
       });
     });
   });

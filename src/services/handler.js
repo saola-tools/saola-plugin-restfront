@@ -231,7 +231,7 @@ function buildMiddlewareFromMapping (context, mapping) {
 
   return function (req, res, next) {
     if (!isMethodIncluded(mapping.method, req.method)) {
-      return next();
+      return Promise.resolve().then(next);
     }
     const requestId = tracelogService.getRequestId(req);
     const reqTR = T.branch({ key: "requestId", value: requestId });
@@ -244,7 +244,9 @@ function buildMiddlewareFromMapping (context, mapping) {
       text: "Req[${requestId}] from [${method}]${url}"
     }, "direct"));
 
-    if (!lodash.isFunction(refMethod)) return next();
+    if (!lodash.isFunction(refMethod)) {
+      return Promise.resolve().then(next);
+    }
 
     let promize = Promise.resolve();
 
