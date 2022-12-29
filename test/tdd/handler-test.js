@@ -698,7 +698,7 @@ describe("handler", function() {
       blockRef: "app-restfront/handler",
       L: loggingFactory.getLogger(),
       T: loggingFactory.getTracer(),
-      errorManager, errorBuilder, serviceSelector, tracelogService
+      sandboxConfig, errorManager, errorBuilder, serviceSelector, tracelogService
     };
 
     let Handler, buildMiddlewareFromMapping;
@@ -723,8 +723,8 @@ describe("handler", function() {
       const middleware = buildMiddlewareFromMapping(context, mapping);
       assert.isFunction(middleware);
       //
-      const req = {};
-      const res = {};
+      const req = new RequestMock({});
+      const res = new ResponseMock();
       const next = sinon.stub();
       middleware(req, res, next);
       //
@@ -744,8 +744,8 @@ describe("handler", function() {
       const middleware = buildMiddlewareFromMapping(context, mapping);
       assert.isFunction(middleware);
       //
-      const req = { method: "GET" };
-      const res = {};
+      const req = new RequestMock({ method: "GET" });
+      const res = new ResponseMock();
       const next = sinon.stub();
       middleware(req, res, next);
       //
@@ -758,11 +758,16 @@ describe("handler", function() {
       const middleware = buildMiddlewareFromMapping(context, mapping);
       assert.isFunction(middleware);
       //
-      const req = { method: "GET" };
+      const req = new RequestMock({ method: "GET" });
       const res = new ResponseMock();
       const next = sinon.stub();
       //
-      const expected = { body: undefined, headers: {} };
+      const expected = {
+        body: undefined,
+        headers: {
+          "X-Return-Code": 0
+        }
+      };
       const resultPromise = middleware(req, res, next);
       assert.isNotNull(resultPromise);
       //
@@ -821,7 +826,9 @@ describe("handler", function() {
           phoneNumber: '+84962306028',
           fullname: 'John Doe'
         },
-        headers: {}
+        headers: {
+          "X-Return-Code": 0
+        }
       };
       const resultPromise = middleware(req, res, next);
       //
@@ -835,75 +842,6 @@ describe("handler", function() {
         assert.fail("This testcase must not be raised");
       }).finally(function() {
         assert.equal(next.callCount, 0);
-      });
-    });
-
-    it("An error is raised when the processing time exceeds the timeout", function() {
-      const context = { ...ctx };
-      const mapping = {
-        method: "GET",
-        inlet: {
-          process: function (serviceMethod, res, reqData, reqOpts, services) {
-            return Promise.delay(1000).then(function() {
-              return {};
-            });
-          }
-        },
-        error: {
-          transform: function(failed, req, reqOpts, services) {
-            return failed;
-          },
-          mutate: {
-            rename: {}
-          }
-        },
-        timeout: 500
-      };
-      const middleware = buildMiddlewareFromMapping(context, mapping);
-      assert.isFunction(middleware);
-      //
-      const req = new RequestMock();
-      const res = new ResponseMock();
-      const next = sinon.stub();
-      const resultPromise = middleware(req, res, next);
-      //
-      assert.isNotNull(resultPromise);
-      //
-      return resultPromise.then(function(info) {
-        true && console.log("Output: ", info);
-        assert.fail("This testcase must raise a timeout Error");
-      }).catch(function(error) {
-        false && console.log("Error: ", error);
-        assert.equal(error.name, "RequestTimeoutOnServer");
-      });
-    });
-
-    it("service method is a normal function, but it raises a string based error", function() {
-      const context = { ...ctx };
-      const mapping = {
-        method: "GET",
-        inlet: {
-          process: function (serviceMethod, res, reqData, reqOpts, services) {
-            return Promise.reject("Error in string type");
-          }
-        }
-      };
-      const middleware = buildMiddlewareFromMapping(context, mapping);
-      assert.isFunction(middleware);
-      //
-      const req = new RequestMock();
-      const res = new ResponseMock();
-      const next = sinon.stub();
-      const resultPromise = middleware(req, res, next);
-      //
-      assert.isNotNull(resultPromise);
-      //
-      return resultPromise.then(function(info) {
-        true && console.log("Output: ", info);
-        assert.fail("This testcase must raise a string Error");
-      }).catch(function(error) {
-        false && console.log("Error: ", error);
-        assert.equal(error, "Error in string type");
       });
     });
 
@@ -1003,6 +941,7 @@ describe("handler", function() {
         headers: {
           "X-Request-Id": "ADD7D6E0-0736-4B79-98C6-2F0EAE0D671C",
           "X-Power-By": "restfront",
+          "X-Return-Code": 0
         },
         body: {
           number: 27,
@@ -1031,7 +970,7 @@ describe("handler", function() {
         assert.equal(res_status_args[0], 200);
         //
         // check the res.set() call
-        assert.equal(res.set.callCount, 2);
+        assert.equal(res.set.callCount, 3);
         false && console.log("res_set_args: ", res.set.args);
         assert.sameMembers(res.set.args[0], [ 'X-Request-Id', 'ADD7D6E0-0736-4B79-98C6-2F0EAE0D671C' ]);
         assert.sameMembers(res.set.args[1], [ 'X-Power-By', 'restfront' ]);
@@ -1047,9 +986,94 @@ describe("handler", function() {
     });
     }
 
-    it("predefined error [error]");
+    it("render a failed response when the required request options are absent", function() {
+      this.skip();
+    });
 
-    it("undefined error [error]");
+    it("render a failed response when the mapping.input.preValidator returns false", function() {
+      this.skip();
+    });
+
+    it("render a failed response when the mapping.input.preValidator raises an Error", function() {
+      this.skip();
+    });
+
+    it("render a failed response when the mapping.input.postValidator returns false", function() {
+      this.skip();
+    });
+
+    it("render a failed response when the mapping.input.postValidator raises an Error", function() {
+      this.skip();
+    });
+
+    it("render a failed response when the processing time exceeds the timeout", function() {
+      const context = { ...ctx };
+      const mapping = {
+        method: "GET",
+        inlet: {
+          process: function (serviceMethod, res, reqData, reqOpts, services) {
+            return Promise.delay(1000).then(function() {
+              return {};
+            });
+          }
+        },
+        error: {
+          transform: function(failed, req, reqOpts, services) {
+            return failed;
+          },
+          mutate: {
+            rename: {}
+          }
+        },
+        timeout: 500
+      };
+      const middleware = buildMiddlewareFromMapping(context, mapping);
+      assert.isFunction(middleware);
+      //
+      const req = new RequestMock();
+      const res = new ResponseMock();
+      const next = sinon.stub();
+      const resultPromise = middleware(req, res, next);
+      //
+      assert.isNotNull(resultPromise);
+      //
+      return resultPromise.then(function(info) {
+        true && console.log("Output: ", info);
+        assert.fail("This testcase must raise a timeout Error");
+      }).catch(function(error) {
+        false && console.log("Error: ", error);
+        assert.equal(error.name, "RequestTimeoutOnServer");
+      });
+    });
+
+    it("service method is a normal function, but it raises a string based error", function() {
+      const context = { ...ctx };
+      const mapping = {
+        method: "GET",
+        inlet: {
+          process: function (serviceMethod, res, reqData, reqOpts, services) {
+            return Promise.reject("Error in string type");
+          }
+        }
+      };
+      const middleware = buildMiddlewareFromMapping(context, mapping);
+      assert.isFunction(middleware);
+      //
+      const req = new RequestMock();
+      const res = new ResponseMock();
+      const next = sinon.stub();
+      const resultPromise = middleware(req, res, next);
+      //
+      assert.isNotNull(resultPromise);
+      //
+      return resultPromise.then(function(info) {
+        true && console.log("Output: ", info);
+        assert.fail("This testcase must raise a string Error");
+      }).catch(function(error) {
+        false && console.log("Error: ", error);
+        assert.equal(error, "Error in string type");
+      });
+    });
   });
 
   describe("transformErrorObject()", function() {
