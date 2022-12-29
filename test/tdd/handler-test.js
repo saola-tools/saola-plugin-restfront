@@ -935,6 +935,12 @@ describe("handler", function() {
       const mapping = {
         method: "GET",
         input: {
+          preValidator: function (req, reqOpts, services) {
+            if (functionType == "promise") {
+              return Promise.resolve(true);
+            }
+            return true;
+          },
           transform: function (req, reqOpts, services) {
             const result = { number: req.params.number };
             if (functionType == "promise") {
@@ -955,6 +961,10 @@ describe("handler", function() {
                 return Promise.resolve(result);
               }
               return result;
+            }
+            //
+            if (functionType == "promise") {
+              return Promise.resolve(true);
             }
             return true;
           },
