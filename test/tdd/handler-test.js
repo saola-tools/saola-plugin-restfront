@@ -922,7 +922,7 @@ describe("handler", function() {
               }
               const fibonacci = new Fibonacci(data);
               const result = fibonacci.finish();
-              result.actionId = data.actionId;
+              result.requestId = opts.requestId;
               if (functionType == "promise") {
                 return Promise.resolve(result);
               }
@@ -961,10 +961,17 @@ describe("handler", function() {
         },
         output: {
           transform: function (result, req, reqOpts, services) {
-            if (functionType == "promise") {
-              return Promise.resolve(result);
+            const packet = {
+              headers: {
+                "X-Request-Id": reqOpts.requestId,
+                "X-Power-By": "restfront"
+              },
+              body: result
             }
-            return result;
+            if (functionType == "promise") {
+              return Promise.resolve(packet);
+            }
+            return packet;
           }
         }
       };
@@ -974,7 +981,7 @@ describe("handler", function() {
       const req = new RequestMock({
         method: "GET",
         headers: {
-          "X-Request-Id": "BB529684-73F2-4222-BFD8-C6A1D786FA1C",
+          "X-Request-Id": "ADD7D6E0-0736-4B79-98C6-2F0EAE0D671C",
         },
         params: {
           number: 27,
@@ -983,8 +990,16 @@ describe("handler", function() {
       const res = new ResponseMock();
       const next = sinon.stub();
       const expected = {
-        body: { value: 196418, step: 27, number: 27, actionId: undefined },
-        headers: {}
+        headers: {
+          "X-Request-Id": "ADD7D6E0-0736-4B79-98C6-2F0EAE0D671C",
+          "X-Power-By": "restfront",
+        },
+        body: {
+          number: 27,
+          step: 27,
+          value: 196418,
+          requestId: "ADD7D6E0-0736-4B79-98C6-2F0EAE0D671C"
+        }
       };
       //
       const resultPromise = middleware(req, res, next);
@@ -1004,6 +1019,12 @@ describe("handler", function() {
         const res_status_args = res.status.args[0];
         assert.lengthOf(res_status_args, 1);
         assert.equal(res_status_args[0], 200);
+        //
+        // check the res.set() call
+        assert.equal(res.set.callCount, 2);
+        false && console.log("res_set_args: ", res.set.args);
+        assert.sameMembers(res.set.args[0], [ 'X-Request-Id', 'ADD7D6E0-0736-4B79-98C6-2F0EAE0D671C' ]);
+        assert.sameMembers(res.set.args[1], [ 'X-Power-By', 'restfront' ]);
         //
         // check the res.json() call
         assert.equal(res.json.callCount, 1);
