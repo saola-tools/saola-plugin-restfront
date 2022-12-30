@@ -334,6 +334,13 @@ function buildMiddlewareFromMapping (context, mapping) {
         });
       }
 
+      // except the fields
+      if (mapping.output && mapping.output.enabled !== false && mapping.output.mutate && mapping.output.mutate.except) {
+        promize = promize.then(function (packet) {
+          return mutateExcludeFields(packet, mapping.output.mutate.except);
+        });
+      }
+
       // render the packet
       promize = promize.then(function (packet) {
         renderPacketToResponse(packet, res);
@@ -397,6 +404,13 @@ function wrapNext (next, verbose) {
 
 function mutateRenameFields (data, nameMappings) {
   return chores.renameJsonFields(data, nameMappings);
+}
+
+function mutateExcludeFields (data, excludedFields) {
+  if (data && isPureObject(data.body)) {
+    data.body = lodash.omit(data.body, excludedFields);
+  }
+  return data;
 }
 
 function applyValidator (validator, defaultRef, reqData, reqOpts, services) {

@@ -106,6 +106,121 @@ describe("handler", function() {
     }
   };
 
+  describe("joinMappings()", function() {
+    let Handler, joinMappings;
+
+    beforeEach(function() {
+      Handler = mockit.acquire("handler", { libraryDir: "../lib" });
+      joinMappings = mockit.get(Handler, "joinMappings");
+    });
+
+    it("Merge a list of apiMaps into an array of mappings", function() {
+      const mappingHash = {
+        "devebot-application": {
+          "apiMaps": [
+            {
+              "path": "/sub/:apiVersion/fibonacci/calc/:number",
+              "method": "GET",
+              "requestOptions": {
+                "requestId": {
+                  "required": true
+                }
+              },
+              "input": {
+                "mutate": {}
+              },
+              "serviceName": "application/example",
+              "methodName": "fibonacci",
+              "output": {
+                "mutate": {}
+              },
+              "inlet": {},
+              "error": {
+                "mutate": {}
+              }
+            }
+          ]
+        },
+        "app-restproxy/git-connector": {
+          "apiMaps": [
+            {
+              "path": "/git/:apiVersion/group/:groupName",
+              "method": "GET",
+              "requestOptions": {
+                "requestId": {
+                  "required": true
+                }
+              },
+              "input": {
+                "mutate": {}
+              },
+              "serviceName": "app-restproxy/gitConnector",
+              "methodName": "getGitGroup",
+              "output": {
+                "mutate": {}
+              },
+              "inlet": {},
+              "error": {
+                "mutate": {}
+              }
+            }
+          ]
+        }
+      };
+      //
+      const expected = [
+        {
+          "path": "/sub/:apiVersion/fibonacci/calc/:number",
+          "method": "GET",
+          "requestOptions": {
+            "requestId": {
+              "required": true
+            }
+          },
+          "input": {
+            "mutate": {}
+          },
+          "serviceName": "application/example",
+          "methodName": "fibonacci",
+          "output": {
+            "mutate": {}
+          },
+          "inlet": {},
+          "error": {
+            "mutate": {}
+          },
+          "errorSource": "devebot-application"
+        },
+        {
+          "path": "/git/:apiVersion/group/:groupName",
+          "method": "GET",
+          "requestOptions": {
+            "requestId": {
+              "required": true
+            }
+          },
+          "input": {
+            "mutate": {}
+          },
+          "serviceName": "app-restproxy/gitConnector",
+          "methodName": "getGitGroup",
+          "output": {
+            "mutate": {}
+          },
+          "inlet": {},
+          "error": {
+            "mutate": {}
+          },
+          "errorSource": "app-restproxy/git-connector"
+        }
+      ];
+      //
+      const mappings = joinMappings(mappingHash);
+      false && console.log(JSON.stringify(mappings, null, 2));
+      assert.sameDeepOrderedMembers(mappings, expected);
+    });
+  });
+
   describe("sanitizeMappings()", function() {
     let Handler, sanitizeMappings;
 

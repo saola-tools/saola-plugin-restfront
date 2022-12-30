@@ -48,13 +48,16 @@ function Service (params = {}) {
         }
       }
     });
+    //
     layerware.push(webweaverService.getSessionLayer([
       webweaverService.getJsonBodyParserLayer(),
       webweaverService.getUrlencodedBodyParserLayer(),
       this.getValidator(),
       this.getRestLayer()
     ], apiFullPath));
+    //
     layerware.push(webweaverService.getDefaultRedirectLayer(["/$", contextPath + "$"]));
+    //
     webweaverService.push(layerware, pluginCfg.priority);
   }
 }
