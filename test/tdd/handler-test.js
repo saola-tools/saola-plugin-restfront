@@ -691,7 +691,8 @@ describe("handler", function() {
       blockRef: "app-restfront/handler",
       L: loggingFactory.getLogger(),
       T: loggingFactory.getTracer(),
-      sandboxConfig, errorManager, errorBuilder, serviceSelector, tracelogService
+      sandboxConfig, errorManager, errorBuilder, serviceSelector, tracelogService,
+      verbose: true
     };
 
     let Handler, buildMiddlewareFromMapping;
@@ -1066,27 +1067,337 @@ describe("handler", function() {
     });
 
     it("render a failed response when the mapping.input.preValidator returns false", function() {
-      this.skip();
+      const context = lodash.merge({}, ctx);
+      const mapping = {
+        method: "GET",
+        input: {
+          preValidator: function (req, reqOpts, services) {
+            return false;
+          }
+        }
+      };
+      const middleware = buildMiddlewareFromMapping(context, mapping);
+      assert.isFunction(middleware);
+      //
+      const req = new RequestMock();
+      const res = new ResponseMock();
+      const next = sinon.stub();
+      //
+      const resultPromise = middleware(req, res, next);
+      //
+      return validateMiddlewareFlow(req, res, next, resultPromise, {
+        failed: true,
+        tuple: undefined,
+        error: {
+          name: "RequestPreValidationError",
+        },
+        stubs: {
+          next: {
+            total: 0
+          },
+          res: {
+            status: {
+              total: 1,
+              args: [
+                [ 500 ]
+              ]
+            },
+            set: {
+              total: 0,
+            },
+            json: {
+              total: 1,
+              args: [
+                [
+                  {
+                    name: "RequestPreValidationError",
+                  }
+                ]
+              ]
+            }
+          }
+        }
+      });
     });
 
     it("render a failed response when the mapping.input.preValidator raises an Error", function() {
-      this.skip();
+      const context = lodash.merge({}, ctx);
+      const mapping = {
+        method: "GET",
+        input: {
+          preValidator: function (req, reqOpts, services) {
+            throw new Error("The mapping.input.preValidator raises an Error");
+            return false;
+          }
+        }
+      };
+      const middleware = buildMiddlewareFromMapping(context, mapping);
+      assert.isFunction(middleware);
+      //
+      const req = new RequestMock();
+      const res = new ResponseMock();
+      const next = sinon.stub();
+      //
+      const resultPromise = middleware(req, res, next);
+      //
+      return validateMiddlewareFlow(req, res, next, resultPromise, {
+        failed: true,
+        tuple: undefined,
+        error: {
+          name: "Error",
+          message: "The mapping.input.preValidator raises an Error",
+        },
+        stubs: {
+          next: {
+            total: 0
+          },
+          res: {
+            status: {
+              total: 1,
+              args: [
+                [ 500 ]
+              ]
+            },
+            set: {
+              total: 0,
+            },
+            json: {
+              total: 1,
+              args: [
+                [
+                  {
+                    name: "Error",
+                    message: "The mapping.input.preValidator raises an Error",
+                  }
+                ]
+              ]
+            }
+          }
+        }
+      });
     });
 
     it("render a failed response when the mapping.input.transform raises an Error", function() {
-      this.skip();
+      const context = lodash.merge({}, ctx);
+      const mapping = {
+        method: "GET",
+        input: {
+          transform: function (reqData, reqOpts, services) {
+            throw new Error("The mapping.input.transform raises an Error");
+          }
+        }
+      };
+      const middleware = buildMiddlewareFromMapping(context, mapping);
+      assert.isFunction(middleware);
+      //
+      const req = new RequestMock();
+      const res = new ResponseMock();
+      const next = sinon.stub();
+      //
+      const resultPromise = middleware(req, res, next);
+      //
+      return validateMiddlewareFlow(req, res, next, resultPromise, {
+        failed: true,
+        tuple: undefined,
+        error: {
+          name: "Error",
+          message: "The mapping.input.transform raises an Error",
+        },
+        stubs: {
+          next: {
+            total: 0
+          },
+          res: {
+            status: {
+              total: 1,
+              args: [
+                [ 500 ]
+              ]
+            },
+            set: {
+              total: 0,
+            },
+            json: {
+              total: 1,
+              args: [
+                [
+                  {
+                    name: "Error",
+                    message: "The mapping.input.transform raises an Error",
+                  }
+                ]
+              ]
+            }
+          }
+        }
+      });
     });
 
     it("render a failed response when the mapping.input.postValidator raises an Error", function() {
-      this.skip();
+      const context = lodash.merge({}, ctx);
+      const mapping = {
+        method: "GET",
+        input: {
+          postValidator: function (reqData, reqOpts, services) {
+            throw new Error("The mapping.input.postValidator raises an Error");
+            return false;
+          }
+        }
+      };
+      const middleware = buildMiddlewareFromMapping(context, mapping);
+      assert.isFunction(middleware);
+      //
+      const req = new RequestMock();
+      const res = new ResponseMock();
+      const next = sinon.stub();
+      //
+      const resultPromise = middleware(req, res, next);
+      //
+      return validateMiddlewareFlow(req, res, next, resultPromise, {
+        failed: true,
+        tuple: undefined,
+        error: {
+          name: "Error",
+          message: "The mapping.input.postValidator raises an Error",
+        },
+        stubs: {
+          next: {
+            total: 0
+          },
+          res: {
+            status: {
+              total: 1,
+              args: [
+                [ 500 ]
+              ]
+            },
+            set: {
+              total: 0,
+            },
+            json: {
+              total: 1,
+              args: [
+                [
+                  {
+                    name: "Error",
+                    message: "The mapping.input.postValidator raises an Error",
+                  }
+                ]
+              ]
+            }
+          }
+        }
+      });
     });
 
     it("render a failed response when the mapping.input.postValidator returns false", function() {
-      this.skip();
+      const context = lodash.merge({}, ctx);
+      const mapping = {
+        method: "GET",
+        input: {
+          postValidator: function (reqData, reqOpts, services) {
+            return false;
+          }
+        }
+      };
+      const middleware = buildMiddlewareFromMapping(context, mapping);
+      assert.isFunction(middleware);
+      //
+      const req = new RequestMock();
+      const res = new ResponseMock();
+      const next = sinon.stub();
+      //
+      const resultPromise = middleware(req, res, next);
+      //
+      return validateMiddlewareFlow(req, res, next, resultPromise, {
+        failed: true,
+        tuple: undefined,
+        error: {
+          name: "RequestPostValidationError",
+        },
+        stubs: {
+          next: {
+            total: 0
+          },
+          res: {
+            status: {
+              total: 1,
+              args: [
+                [ 500 ]
+              ]
+            },
+            set: {
+              total: 0,
+            },
+            json: {
+              total: 1,
+              args: [
+                [
+                  {
+                    name: "RequestPostValidationError",
+                  }
+                ]
+              ]
+            }
+          }
+        }
+      });
     });
 
     it("render a failed response when the mapping.output.transform raises an Error", function() {
-      this.skip();
+      const context = lodash.merge({}, ctx);
+      const mapping = {
+        method: "GET",
+        input: {
+          transform: function (reqData, reqOpts, services) {
+            throw new Error("The mapping.output.transform raises an Error");
+          }
+        }
+      };
+      const middleware = buildMiddlewareFromMapping(context, mapping);
+      assert.isFunction(middleware);
+      //
+      const req = new RequestMock();
+      const res = new ResponseMock();
+      const next = sinon.stub();
+      //
+      const resultPromise = middleware(req, res, next);
+      //
+      return validateMiddlewareFlow(req, res, next, resultPromise, {
+        failed: true,
+        tuple: undefined,
+        error: {
+          name: "Error",
+          message: "The mapping.output.transform raises an Error",
+        },
+        stubs: {
+          next: {
+            total: 0
+          },
+          res: {
+            status: {
+              total: 1,
+              args: [
+                [ 500 ]
+              ]
+            },
+            set: {
+              total: 0,
+            },
+            json: {
+              total: 1,
+              args: [
+                [
+                  {
+                    name: "Error",
+                    message: "The mapping.output.transform raises an Error",
+                  }
+                ]
+              ]
+            }
+          }
+        }
+      });
     });
 
     it("render a failed response when the processing time exceeds the timeout", function() {
@@ -1116,6 +1427,7 @@ describe("handler", function() {
       const req = new RequestMock();
       const res = new ResponseMock();
       const next = sinon.stub();
+      //
       const resultPromise = middleware(req, res, next);
       //
       return validateMiddlewareFlow(req, res, next, resultPromise, {

@@ -213,7 +213,7 @@ function buildMiddlewareFromMapping (context, mapping) {
   context = context || {};
 
   const sandboxConfig = context.sandboxConfig || {};
-  const { L, T, errorManager, errorBuilder, serviceSelector, tracelogService, schemaValidator } = context;
+  const { L, T, errorManager, errorBuilder, serviceSelector, tracelogService, schemaValidator, verbose } = context;
 
   const timeout = mapping.timeout || sandboxConfig.defaultTimeout;
 
@@ -231,7 +231,7 @@ function buildMiddlewareFromMapping (context, mapping) {
 
   return function (req, res, next) {
     if (!isMethodIncluded(mapping.method, req.method)) {
-      return Promise.resolve().then(next);
+      return wrapNext(next, verbose);
     }
     const requestId = tracelogService.getRequestId(req);
     const reqTR = T.branch({ key: "requestId", value: requestId });
@@ -245,7 +245,7 @@ function buildMiddlewareFromMapping (context, mapping) {
     }, "direct"));
 
     if (!lodash.isFunction(refMethod)) {
-      return Promise.resolve().then(next);
+      return wrapNext(next, verbose);
     }
 
     let promize = Promise.resolve();
@@ -387,8 +387,12 @@ function buildMiddlewareFromMapping (context, mapping) {
       }));
     });
 
-    return promize;
+    return verbose ? promize : undefined;
   };
+}
+
+function wrapNext (next, verbose) {
+  return verbose ? Promise.resolve().then(next) : next();
 }
 
 function mutateRenameFields (data, nameMappings) {
