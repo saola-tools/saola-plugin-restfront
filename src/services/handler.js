@@ -341,6 +341,15 @@ function buildMiddlewareFromMapping (context, mapping) {
         });
       }
 
+      if (mapping.output && mapping.output.enabled !== false && mapping.output.sanitize) {
+        promize = promize.then(function (packet) {
+          if (packet && isPureObject(packet.body)) {
+            packet.body = mapping.output.sanitize(packet.body, req, reqOpts, services);
+          }
+          return packet;
+        });
+      }
+
       // render the packet
       promize = promize.then(function (packet) {
         renderPacketToResponse(packet, res);

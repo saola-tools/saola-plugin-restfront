@@ -119,7 +119,7 @@ function validateMiddlewareFlow (req, res, next, flow, expected) {
   assert.isNotNull(flow);
   //
   return flow.then(function(actualTuple) {
-    !silent && failed && console.log("Tuple: ", actualTuple);
+    !silent && failed && console.log("Tuple: %o", actualTuple);
     const { tuple: expectedTuple } = expected;
     if (expectedTuple !== undefined) {
       assert.deepEqual(actualTuple, expectedTuple);
@@ -128,7 +128,7 @@ function validateMiddlewareFlow (req, res, next, flow, expected) {
       assert.fail("This testcase must raise an Error");
     }
   }).catch(function(actualError) {
-    !silent && !failed && console.log("Error: ", actualError);
+    !silent && !failed && console.log("Error: %o", actualError);
     const { error: expectedError } = expected;
     if (expectedError !== undefined) {
       if (expectedError && lodash.isObject(expectedError)) {

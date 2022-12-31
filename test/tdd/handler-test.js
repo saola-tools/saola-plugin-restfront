@@ -974,6 +974,106 @@ describe("handler", function() {
       });
     });
 
+    it("Invoke a HTTP request to middleware with excluding the output data fields", function() {
+      const context = lodash.merge({}, ctx);
+      const mapping = {
+        method: "GET",
+        input: {
+          transform: function (req, reqOpts, services) {
+            return req.body;
+          },
+          mutate: {
+            rename: {
+              "name": "fullname"
+            }
+          }
+        },
+        output: {
+          transform: function (result, req, reqOpts, services) {
+            return {
+              body: result
+            };
+          },
+          mutate: {
+            rename: {},
+            except: [
+              "_id",
+              "author._id",
+              "comments[0].id",
+              "comments[1].id",
+            ]
+          }
+        }
+      };
+      const middleware = buildMiddlewareFromMapping(context, mapping);
+      assert.isFunction(middleware);
+      //
+      const req = new RequestMock({
+        method: "GET",
+        body: {
+          _id: 17779,
+          name: "John Doe",
+          email: "john.doe@gmail.com",
+          phoneNumber: "+84962306028",
+          updatedAt: "2018-08-22",
+          author: {
+            _id: 13322,
+            name: "Kill Bill",
+            level: "high"
+          },
+          comments: [{
+            id: 1,
+            description: "killbill",
+            createdAt: "2018-08-20"
+          }, {
+            id: 2,
+            description: "awesomes",
+            createdAt: "2018-08-21"
+          }]
+        }
+      });
+      const res = new ResponseMock();
+      const next = sinon.stub();
+      //
+      const resultPromise = middleware(req, res, next);
+      //
+      return validateMiddlewareFlow(req, res, next, resultPromise, {
+        silent: false,
+        failed: false,
+        tuple: {
+          body: {
+            fullname: "John Doe",
+            email: "john.doe@gmail.com",
+            phoneNumber: "+84962306028",
+            updatedAt: "2018-08-22",
+            author: {
+              name: "Kill Bill",
+              level: "high"
+            },
+            comments: [{
+              description: "killbill",
+              createdAt: "2018-08-20"
+            }, {
+              description: "awesomes",
+              createdAt: "2018-08-21"
+            }]
+          },
+          headers: {
+            "X-Return-Code": 0
+          }
+        },
+        error: undefined,
+        stubs: {
+          next: {
+            total: 0
+          },
+          json: {
+            total: 1
+          }
+        }
+      });
+    });
+
     for (const functionType of ["synchronous", "promise"]) {
     it("full of successful flow in the " + functionType + " case", function() {
       const serviceSelector = {
