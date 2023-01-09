@@ -27,7 +27,7 @@ const errorBuilder = {
 };
 
 describe("handler", function() {
-  const sandboxConfig = {
+  const portletConfig = {
     "contextPath": "/restfront",
     "apiPath": "rest",
     "mappingStore": {
@@ -528,7 +528,7 @@ describe("handler", function() {
     });
 
     it("extract the predefined headers properly", function() {
-      const output = extractRequestOptions(req, sandboxConfig.requestOptions);
+      const output = extractRequestOptions(req, portletConfig.requestOptions);
       const expected = {
         "requestId": "52160bbb-cac5-405f-a1e9-a55323b17938",
         "clientType": "agent",
@@ -541,7 +541,7 @@ describe("handler", function() {
     });
 
     it("the headers will be overridden by extensions", function() {
-      const output = extractRequestOptions(req, sandboxConfig.requestOptions, {
+      const output = extractRequestOptions(req, portletConfig.requestOptions, {
         extensions: {
           requestId: "7f36af79-077b-448e-9c66-fc177996fd10",
           timeout: 1000
@@ -560,7 +560,7 @@ describe("handler", function() {
     });
 
     it("the request-options will be overridden by defined extensions only", function() {
-      const output = extractRequestOptions(req, sandboxConfig.requestOptions, {
+      const output = extractRequestOptions(req, portletConfig.requestOptions, {
         extensions: {
           requestId: undefined,
           timeout: 1000
@@ -585,7 +585,7 @@ describe("handler", function() {
           "optionName": "tenantId",
           "required": true
         },
-      }, sandboxConfig.requestOptions);
+      }, portletConfig.requestOptions);
       const failedReqOpts = [];
       const output = extractRequestOptions(req, requestOptions, {}, failedReqOpts);
       false && console.log(JSON.stringify(output, null, 2));
@@ -602,7 +602,7 @@ describe("handler", function() {
       assert.sameMembers(failedReqOpts, [ "tenantId" ]);
     });
 
-    const config = lodash.assign({ userAgentEnabled: true }, sandboxConfig);
+    const config = lodash.assign({ userAgentEnabled: true }, portletConfig);
 
     it("uaParser is safety: should not crack the requests in any case", function() {
       const req = new RequestMock({
@@ -610,7 +610,7 @@ describe("handler", function() {
           "User-Agent": null
         }
       });
-      const output = extractRequestOptions(req, sandboxConfig.requestOptions, config);
+      const output = extractRequestOptions(req, portletConfig.requestOptions, config);
       assert.deepEqual(output.userAgent, {});
     });
 
@@ -620,7 +620,7 @@ describe("handler", function() {
           "User-Agent": "Any string, wrong format"
         }
       });
-      const output = extractRequestOptions(req, sandboxConfig.requestOptions, config);
+      const output = extractRequestOptions(req, portletConfig.requestOptions, config);
       assert.deepInclude(output.userAgent, {
         "os": {
           "name": undefined,
@@ -636,7 +636,7 @@ describe("handler", function() {
           "User-Agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/535.2 (KHTML, like Gecko) Ubuntu/11.10 Chromium/15.0.874.106 Chrome/15.0.874.106 Safari/535.2",
         }
       });
-      const output = extractRequestOptions(req, sandboxConfig.requestOptions, config);
+      const output = extractRequestOptions(req, portletConfig.requestOptions, config);
       assert.deepInclude(output.userAgent, {
         "browser": {
           "name": "Chromium",
@@ -672,7 +672,7 @@ describe("handler", function() {
           message: "Hello world"
         }
       };
-      const output = addDefaultResponseHeaders(packet, sandboxConfig.responseOptions);
+      const output = addDefaultResponseHeaders(packet, portletConfig.responseOptions);
       assert.deepEqual(output, {
         headers: {
           "X-Return-Code": 0
@@ -692,7 +692,7 @@ describe("handler", function() {
           message: "Hello world"
         }
       };
-      const output = addDefaultResponseHeaders(packet, sandboxConfig.responseOptions);
+      const output = addDefaultResponseHeaders(packet, portletConfig.responseOptions);
       assert.deepEqual(output, {
         headers: {
           "X-Return-Code": 1
@@ -806,7 +806,7 @@ describe("handler", function() {
       blockRef: "app-restfront/handler",
       L: loggingFactory.getLogger(),
       T: loggingFactory.getTracer(),
-      sandboxConfig, errorManager, errorBuilder, serviceSelector, tracelogService,
+      portletConfig, errorManager, errorBuilder, serviceSelector, tracelogService,
       verbose: true
     };
 
@@ -1218,7 +1218,7 @@ describe("handler", function() {
 
     it("render a failed response when the required request options are absent", function() {
       const context = lodash.merge({}, ctx, {
-        "sandboxConfig": {
+        "portletConfig": {
           "requestOptions": {
             "requestId": {
               "required": true
@@ -1761,7 +1761,7 @@ describe("handler", function() {
           }
         }
       };
-      const result = transformErrorObject(error, sandboxConfig.responseOptions);
+      const result = transformErrorObject(error, portletConfig.responseOptions);
       false && console.log(JSON.stringify(result, null, 2));
       assert.deepEqual(lodash.omit(result, ["body.stack"]), expected);
     });
@@ -1884,7 +1884,7 @@ describe("handler", function() {
             price: 12000
           }
         }
-      }, sandboxConfig.responseOptions), {
+      }, portletConfig.responseOptions), {
         statusCode: 400,
         headers: {
           "ContentType": "application/json",
@@ -1962,7 +1962,7 @@ describe("handler", function() {
           q: "hello"
         }
       });
-      const responseOptions = sandboxConfig.responseOptions;
+      const responseOptions = portletConfig.responseOptions;
       //
       const packet = transformErrorToPacket(failed, mapping, req, reqOpts, services, responseOptions);
       false && console.log(JSON.stringify(packet, null, 2));

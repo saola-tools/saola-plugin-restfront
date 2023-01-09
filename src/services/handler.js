@@ -7,15 +7,47 @@ const lodash = Devebot.require("lodash");
 const Validator = require("schema-validator");
 const path = require("path");
 
+const { portletifyConfig, PortletMixiner } = require("app-webserver").require("portlet");
 const { isPureObject, parseUserAgent } = require("../utils");
 
 function Handler (params = {}) {
+  const { tracelogService, webweaverService } = params;
+  const { sandboxRegistry, errorManager, mappingLoader, schemaValidator } = params;
+
   const { loggingFactory, packageName, sandboxConfig } = params;
-  const { sandboxRegistry, errorManager, tracelogService, mappingLoader, schemaValidator } = params;
   const L = loggingFactory.getLogger();
   const T = loggingFactory.getTracer();
 
-  const mappingHash = sanitizeMappings(mappingLoader.loadMappings(sandboxConfig.mappingStore));
+  const pluginConfig = portletifyConfig(sandboxConfig);
+
+  PortletMixiner.call(this, {
+    pluginConfig,
+    portletForwarder: webweaverService,
+    portletArguments: {
+      L, T, packageName,
+      sandboxRegistry, errorManager, mappingLoader, schemaValidator, tracelogService
+    },
+    PortletConstructor: Portlet,
+  });
+
+  // @deprecated
+  this.validator = function (express) {
+    return this.hasPortlet() && this.getPortlet().validator(express) || undefined;
+  };
+
+  // @deprecated
+  this.buildRestRouter = function (express) {
+    return this.hasPortlet() && this.getPortlet().buildRestRouter(express) || undefined;
+  };
+}
+
+Object.assign(Handler.prototype, PortletMixiner.prototype);
+
+function Portlet (params = {}) {
+  const { L, T, packageName, portletName, portletConfig } = params;
+  const { sandboxRegistry, errorManager, mappingLoader, schemaValidator, tracelogService } = params;
+
+  const mappingHash = sanitizeMappings(mappingLoader.loadMappings(portletConfig.mappingStore));
 
   const mappings = joinMappings(mappingHash);
 
@@ -30,14 +62,17 @@ function Handler (params = {}) {
     });
   }
 
-  const serviceResolver = sandboxConfig.serviceResolver || "app-opmaster/commander";
+  const serviceResolver = portletConfig.serviceResolver || "app-opmaster/commander";
   const serviceSelector = chores.newServiceSelector({ serviceResolver, sandboxRegistry });
 
   const errorBuilder = errorManager.register(packageName, {
-    errorCodes: sandboxConfig.errorCodes
+    errorCodes: portletConfig.errorCodes
   });
 
-  const CTX = { L, T, errorManager, errorBuilder, serviceSelector, tracelogService, sandboxConfig, schemaValidator };
+  const CTX = {
+    L, T, portletName, portletConfig,
+    errorManager, errorBuilder, serviceSelector, schemaValidator, tracelogService
+  };
 
   this.validator = function (express) {
     const router = express.Router();
@@ -47,7 +82,8 @@ function Handler (params = {}) {
           if (!isMethodIncluded(mapping.method, req.method)) {
             return next();
           }
-          const requestId = tracelogService.getRequestId(req);
+          const logtracerPortlet = tracelogService.getPortlet(portletName);
+          const requestId = logtracerPortlet && logtracerPortlet.getRequestId(req);
           const reqTR = T.branch({ key: "requestId", value: requestId });
           L.has("info") && L.log("info", reqTR.add({
             mapPath: mapping.path,
@@ -87,7 +123,8 @@ Handler.referenceHash = {
   mappingLoader: "devebot/mappingLoader",
   sandboxRegistry: "devebot/sandboxRegistry",
   schemaValidator: "devebot/schemaValidator",
-  tracelogService: "app-tracelog/tracelogService"
+  tracelogService: "app-tracelog/tracelogService",
+  webweaverService: "app-webweaver/webweaverService"
 };
 
 module.exports = Handler;
@@ -212,16 +249,16 @@ function isMethodIncluded (methods, reqMethod) {
 function buildMiddlewareFromMapping (context, mapping) {
   context = context || {};
 
-  const sandboxConfig = context.sandboxConfig || {};
-  const { L, T, errorManager, errorBuilder, serviceSelector, tracelogService, schemaValidator, verbose } = context;
+  const { portletName, portletConfig } = context;
+  const { L, T, errorManager, errorBuilder, serviceSelector, schemaValidator, tracelogService, verbose } = context;
 
-  const timeout = mapping.timeout || sandboxConfig.defaultTimeout;
+  const timeout = mapping.timeout || portletConfig.defaultTimeout;
 
   const ref = serviceSelector.lookupMethod(mapping.serviceName, mapping.methodName);
   const refMethod = ref && ref.method;
 
-  const requestOptions = lodash.merge({}, sandboxConfig.requestOptions, mapping.requestOptions);
-  const responseOptions = lodash.merge({}, sandboxConfig.responseOptions, mapping.responseOptions);
+  const requestOptions = lodash.merge({}, portletConfig.requestOptions, mapping.requestOptions);
+  const responseOptions = lodash.merge({}, portletConfig.responseOptions, mapping.responseOptions);
 
   const mappingErrorBuilder = errorManager.getErrorBuilder(mapping.errorSource) || errorBuilder;
 
@@ -233,7 +270,8 @@ function buildMiddlewareFromMapping (context, mapping) {
     if (!isMethodIncluded(mapping.method, req.method)) {
       return wrapNext(next, verbose);
     }
-    const requestId = tracelogService.getRequestId(req);
+    const logtracerPortlet = tracelogService.getPortlet(portletName);
+    const requestId = logtracerPortlet && logtracerPortlet.getRequestId(req);
     const reqTR = T.branch({ key: "requestId", value: requestId });
     L.has("info") && L.log("info", reqTR.add({
       mapPath: mapping.path,
@@ -252,7 +290,7 @@ function buildMiddlewareFromMapping (context, mapping) {
 
     const failedReqOpts = [];
     const reqOpts = extractRequestOptions(req, requestOptions, {
-      userAgentEnabled: sandboxConfig.userAgentEnabled,
+      userAgentEnabled: portletConfig.userAgentEnabled,
       extensions: { requestId, timeout }
     }, failedReqOpts);
 
