@@ -4,13 +4,46 @@ const Devebot = require("devebot");
 const lodash = Devebot.require("lodash");
 const path = require("path");
 
+const { PortletMixiner } = require("app-webserver").require("portlet");
+
 function Service (params = {}) {
+  const { configPortletifier, restfrontHandler, webweaverService } = params;
+
+  const pluginConfig = configPortletifier.getPluginConfig();
+
+  PortletMixiner.call(this, {
+    pluginConfig,
+    portletForwarder: webweaverService,
+    portletArguments: { L, T, restfrontHandler, webweaverService },
+    PortletConstructor: Portlet,
+  });
+
+  // @deprecated
+  this.getAssetsLayer = function (webpath, filepath, index) {
+    return this.hasPortlet() && this.getPortlet().getAssetsLayer(webpath, filepath, index) || undefined;
+  };
+
+  // @deprecated
+  this.getValidator = function (express) {
+    return this.hasPortlet() && this.getPortlet().getValidator() || undefined;
+  };
+
+  // @deprecated
+  this.getRestLayer = function (express) {
+    return this.hasPortlet() && this.getPortlet().getRestLayer() || undefined;
+  };
+}
+
+Object.assign(Service.prototype, PortletMixiner.prototype);
+
+function Portlet (params = {}) {
+  const { portletName, portletConfig } = params;
   const { restfrontHandler, webweaverService } = params;
-  const pluginCfg = lodash.get(params, ["sandboxConfig"], {});
-  const contextPath = pluginCfg.contextPath || "/restfront";
-  const apiPath = pluginCfg.apiPath || "";
+
+  const contextPath = portletConfig.contextPath || "/restfront";
+  const apiPath = portletConfig.apiPath || "";
   const apiFullPath = path.join(contextPath, apiPath);
-  const staticpages = pluginCfg.static;
+  const staticpages = portletConfig.static;
   const express = webweaverService.express;
 
   this.getAssetsLayer = function(webpath, filepath, index) {
@@ -25,7 +58,7 @@ function Service (params = {}) {
     return {
       name: "app-restfront-handler-validator",
       path: apiFullPath,
-      middleware: restfrontHandler.validator(express)
+      middleware: restfrontHandler.getPortlet(portletName).validator(express)
     };
   };
 
@@ -33,11 +66,12 @@ function Service (params = {}) {
     return {
       name: "app-restfront-handler-restapi",
       path: apiFullPath,
-      middleware: restfrontHandler.buildRestRouter(express)
+      middleware: restfrontHandler.getPortlet(portletName).buildRestRouter(express)
     };
   };
 
-  if (pluginCfg.autowired !== false) {
+  if (portletConfig.autowired !== false && webweaverService.hasPortlet(portletName)) {
+    const webweaverPortlet = webweaverService.getPortlet(portletName);
     const self = this;
     const layerware = [];
     lodash.keys(staticpages).forEach(function(webpath, index) {
@@ -49,20 +83,21 @@ function Service (params = {}) {
       }
     });
     //
-    layerware.push(webweaverService.getSessionLayer([
-      webweaverService.getJsonBodyParserLayer(),
-      webweaverService.getUrlencodedBodyParserLayer(),
+    layerware.push(webweaverPortlet.getSessionLayer([
+      webweaverPortlet.getJsonBodyParserLayer(),
+      webweaverPortlet.getUrlencodedBodyParserLayer(),
       this.getValidator(),
       this.getRestLayer()
     ], apiFullPath));
     //
-    layerware.push(webweaverService.getDefaultRedirectLayer(["/$", contextPath + "$"]));
+    layerware.push(webweaverPortlet.getDefaultRedirectLayer(["/$", contextPath + "$"]));
     //
-    webweaverService.push(layerware, pluginCfg.priority);
+    webweaverPortlet.push(layerware, portletConfig.priority);
   }
 }
 
 Service.referenceHash = {
+  configPortletifier: "consformer",
   restfrontHandler: "handler",
   webweaverService: "app-webweaver/webweaverService"
 };

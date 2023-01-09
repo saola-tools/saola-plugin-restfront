@@ -7,18 +7,18 @@ const lodash = Devebot.require("lodash");
 const Validator = require("schema-validator");
 const path = require("path");
 
-const { portletifyConfig, PortletMixiner } = require("app-webserver").require("portlet");
+const { PortletMixiner } = require("app-webserver").require("portlet");
 const { isPureObject, parseUserAgent } = require("../utils");
 
 function Handler (params = {}) {
-  const { tracelogService, webweaverService } = params;
+  const { configPortletifier, tracelogService, webweaverService } = params;
   const { sandboxRegistry, errorManager, mappingLoader, schemaValidator } = params;
 
-  const { loggingFactory, packageName, sandboxConfig } = params;
+  const { loggingFactory, packageName } = params;
   const L = loggingFactory.getLogger();
   const T = loggingFactory.getTracer();
 
-  const pluginConfig = portletifyConfig(sandboxConfig);
+  const pluginConfig = configPortletifier.getPluginConfig();
 
   PortletMixiner.call(this, {
     pluginConfig,
@@ -119,6 +119,7 @@ function Portlet (params = {}) {
 }
 
 Handler.referenceHash = {
+  configPortletifier: "consformer",
   errorManager: "app-errorlist/manager",
   mappingLoader: "devebot/mappingLoader",
   sandboxRegistry: "devebot/sandboxRegistry",
