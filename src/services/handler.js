@@ -7,25 +7,22 @@ const lodash = Devebot.require("lodash");
 const Validator = require("schema-validator");
 const path = require("path");
 
-const { PortletMixiner } = require("app-webserver").require("portlet");
+const portlet = require("app-webserver").require("portlet");
+const { PORTLETS_COLLECTION_NAME, PortletMixiner } = portlet;
 const { isPureObject, parseUserAgent } = require("../utils");
 
 function Handler (params = {}) {
-  const { configPortletifier, tracelogService, webweaverService } = params;
+  const { packageName, loggingFactory, configPortletifier, tracelogService, webweaverService } = params;
   const { sandboxRegistry, errorManager, mappingLoader, schemaValidator } = params;
-
-  const { loggingFactory, packageName } = params;
-  const L = loggingFactory.getLogger();
-  const T = loggingFactory.getTracer();
 
   const pluginConfig = configPortletifier.getPluginConfig();
 
   PortletMixiner.call(this, {
-    pluginConfig,
-    portletForwarder: webweaverService,
+    portletDescriptors: lodash.get(pluginConfig, PORTLETS_COLLECTION_NAME),
+    portletReferenceHolders: { webweaverService, tracelogService },
     portletArguments: {
-      L, T, packageName,
-      sandboxRegistry, errorManager, mappingLoader, schemaValidator, tracelogService
+      packageName, loggingFactory,
+      sandboxRegistry, errorManager, mappingLoader, schemaValidator
     },
     PortletConstructor: Portlet,
   });
@@ -43,9 +40,28 @@ function Handler (params = {}) {
 
 Object.assign(Handler.prototype, PortletMixiner.prototype);
 
+Handler.referenceHash = {
+  configPortletifier: "portletifier",
+  errorManager: "app-errorlist/manager",
+  mappingLoader: "devebot/mappingLoader",
+  sandboxRegistry: "devebot/sandboxRegistry",
+  schemaValidator: "devebot/schemaValidator",
+  tracelogService: "app-tracelog/tracelogService",
+  webweaverService: "app-webweaver/webweaverService"
+};
+
 function Portlet (params = {}) {
-  const { L, T, packageName, portletName, portletConfig } = params;
+  const { packageName, loggingFactory, portletName, portletConfig } = params;
   const { sandboxRegistry, errorManager, mappingLoader, schemaValidator, tracelogService } = params;
+
+  const L = loggingFactory.getLogger();
+  const T = loggingFactory.getTracer();
+  const blockRef = chores.getBlockRef(__filename, packageName || "app-restfront");
+
+  L && L.has("silly") && L.log("silly", T && T.add({ portletName }).toMessage({
+    tags: [ blockRef ],
+    text: "The Portlet[${portletName}] is available"
+  }));
 
   const mappingHash = sanitizeMappings(mappingLoader.loadMappings(portletConfig.mappingStore));
 
@@ -82,10 +98,9 @@ function Portlet (params = {}) {
           if (!isMethodIncluded(mapping.method, req.method)) {
             return next();
           }
-          const logtracerPortlet = tracelogService.getPortlet(portletName);
-          const requestId = logtracerPortlet && logtracerPortlet.getRequestId(req);
+          const requestId = tracelogService.getRequestId(req);
           const reqTR = T.branch({ key: "requestId", value: requestId });
-          L.has("info") && L.log("info", reqTR.add({
+          L && L.has("info") && L.log("info", reqTR && reqTR.add({
             mapPath: mapping.path,
             mapMethod: mapping.method,
             url: req.url,
@@ -117,18 +132,6 @@ function Portlet (params = {}) {
     return router;
   };
 }
-
-Handler.referenceHash = {
-  configPortletifier: "consformer",
-  errorManager: "app-errorlist/manager",
-  mappingLoader: "devebot/mappingLoader",
-  sandboxRegistry: "devebot/sandboxRegistry",
-  schemaValidator: "devebot/schemaValidator",
-  tracelogService: "app-tracelog/tracelogService",
-  webweaverService: "app-webweaver/webweaverService"
-};
-
-module.exports = Handler;
 
 function joinMappings (mappingHash, mappings = []) {
   lodash.forOwn(mappingHash, function(mappingBundle, mappingName) {
@@ -271,10 +274,9 @@ function buildMiddlewareFromMapping (context, mapping) {
     if (!isMethodIncluded(mapping.method, req.method)) {
       return wrapNext(next, verbose);
     }
-    const logtracerPortlet = tracelogService.getPortlet(portletName);
-    const requestId = logtracerPortlet && logtracerPortlet.getRequestId(req);
+    const requestId = tracelogService.getRequestId(req);
     const reqTR = T.branch({ key: "requestId", value: requestId });
-    L.has("info") && L.log("info", reqTR.add({
+    L && L.has("info") && L.log("info", reqTR.add({
       mapPath: mapping.path,
       mapMethod: mapping.method,
       url: req.url,
@@ -393,7 +395,7 @@ function buildMiddlewareFromMapping (context, mapping) {
       promize = promize.then(function (packet) {
         renderPacketToResponse(packet, res);
         //
-        L.has("trace") && L.log("trace", reqTR.toMessage({
+        L && L.has("trace") && L.log("trace", reqTR.toMessage({
           text: "Req[${requestId}] is completed"
         }));
         //
@@ -407,7 +409,7 @@ function buildMiddlewareFromMapping (context, mapping) {
     }
 
     promize = promize.catch(Promise.TimeoutError, function() {
-      L.has("error") && L.log("error", reqTR.add({
+      L && L.has("error") && L.log("error", reqTR.add({
         timeout: reqOpts.timeout
       }).toMessage({
         text: "Req[${requestId}] has timeout after ${timeout} seconds"
@@ -429,7 +431,7 @@ function buildMiddlewareFromMapping (context, mapping) {
       // Render the packet
       packet.statusCode = packet.statusCode || 500;
       renderPacketToResponse(packet, res);
-      L.has("error") && L.log("error", reqTR.add(packet).toMessage({
+      L && L.has("error") && L.log("error", reqTR.add(packet).toMessage({
         text: "Req[${requestId}] has failed, status[${statusCode}], headers: ${headers}, body: ${body}"
       }));
       //
@@ -437,7 +439,7 @@ function buildMiddlewareFromMapping (context, mapping) {
     });
 
     promize.finally(function () {
-      L.has("silly") && L.log("silly", reqTR.toMessage({
+      L && L.has("silly") && L.log("silly", reqTR.toMessage({
         text: "Req[${requestId}] end"
       }));
     });
@@ -687,3 +689,5 @@ let transformErrorToPacket = transformErrorToPacketModern;
 if (chores.isUpgradeSupported("app-restfront-legacy-error-to-response")) {
   transformErrorToPacket = transformErrorToPacketLegacy;
 }
+
+module.exports = Handler;

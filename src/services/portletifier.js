@@ -2,16 +2,16 @@
 
 const { portletifyConfig } = require("app-webserver").require("portlet");
 
-function Consformer (params = {}) {
+function Service (params = {}) {
   const { sandboxConfig } = params;
   //
   const pluginConfig = portletifyConfig(sandboxConfig);
   //
   this.getPluginConfig = function() {
     return pluginConfig;
-  }
+  };
 }
 
-Consformer.referenceHash = {};
+Service.referenceHash = {};
 
-module.exports = Consformer;
+module.exports = Service;

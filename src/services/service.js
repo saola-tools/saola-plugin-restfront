@@ -2,19 +2,22 @@
 
 const Devebot = require("devebot");
 const lodash = Devebot.require("lodash");
+const chores = Devebot.require("chores");
 const path = require("path");
 
-const { PortletMixiner } = require("app-webserver").require("portlet");
+const portlet = require("app-webserver").require("portlet");
+const { PORTLETS_COLLECTION_NAME, PortletMixiner } = portlet;
 
 function Service (params = {}) {
-  const { configPortletifier, restfrontHandler, webweaverService } = params;
+  const { packageName, loggingFactory, configPortletifier, restfrontHandler, webweaverService } = params;
+  const express = webweaverService.express;
 
   const pluginConfig = configPortletifier.getPluginConfig();
 
   PortletMixiner.call(this, {
-    pluginConfig,
-    portletForwarder: webweaverService,
-    portletArguments: { L, T, restfrontHandler, webweaverService },
+    portletDescriptors: lodash.get(pluginConfig, PORTLETS_COLLECTION_NAME),
+    portletReferenceHolders: { restfrontHandler, webweaverService },
+    portletArguments: { packageName, loggingFactory, express },
     PortletConstructor: Portlet,
   });
 
@@ -36,15 +39,29 @@ function Service (params = {}) {
 
 Object.assign(Service.prototype, PortletMixiner.prototype);
 
+Service.referenceHash = {
+  configPortletifier: "portletifier",
+  restfrontHandler: "handler",
+  webweaverService: "app-webweaver/webweaverService"
+};
+
 function Portlet (params = {}) {
   const { portletName, portletConfig } = params;
-  const { restfrontHandler, webweaverService } = params;
+  const { packageName, loggingFactory, express, restfrontHandler, webweaverService } = params;
+
+  const L = loggingFactory.getLogger();
+  const T = loggingFactory.getTracer();
+  const blockRef = chores.getBlockRef(__filename, packageName || "app-restfront");
+
+  L && L.has("silly") && L.log("silly", T && T.add({ portletName }).toMessage({
+    tags: [ blockRef ],
+    text: "The Portlet[${portletName}] is available"
+  }));
 
   const contextPath = portletConfig.contextPath || "/restfront";
   const apiPath = portletConfig.apiPath || "";
   const apiFullPath = path.join(contextPath, apiPath);
   const staticpages = portletConfig.static;
-  const express = webweaverService.express;
 
   this.getAssetsLayer = function(webpath, filepath, index) {
     return {
@@ -58,7 +75,7 @@ function Portlet (params = {}) {
     return {
       name: "app-restfront-handler-validator",
       path: apiFullPath,
-      middleware: restfrontHandler.getPortlet(portletName).validator(express)
+      middleware: restfrontHandler.validator(express)
     };
   };
 
@@ -66,12 +83,11 @@ function Portlet (params = {}) {
     return {
       name: "app-restfront-handler-restapi",
       path: apiFullPath,
-      middleware: restfrontHandler.getPortlet(portletName).buildRestRouter(express)
+      middleware: restfrontHandler.buildRestRouter(express)
     };
   };
 
-  if (portletConfig.autowired !== false && webweaverService.hasPortlet(portletName)) {
-    const webweaverPortlet = webweaverService.getPortlet(portletName);
+  if (portletConfig.autowired !== false) {
     const self = this;
     const layerware = [];
     lodash.keys(staticpages).forEach(function(webpath, index) {
@@ -83,23 +99,17 @@ function Portlet (params = {}) {
       }
     });
     //
-    layerware.push(webweaverPortlet.getSessionLayer([
-      webweaverPortlet.getJsonBodyParserLayer(),
-      webweaverPortlet.getUrlencodedBodyParserLayer(),
+    layerware.push(webweaverService.getSessionLayer([
+      webweaverService.getJsonBodyParserLayer(),
+      webweaverService.getUrlencodedBodyParserLayer(),
       this.getValidator(),
       this.getRestLayer()
     ], apiFullPath));
     //
-    layerware.push(webweaverPortlet.getDefaultRedirectLayer(["/$", contextPath + "$"]));
+    layerware.push(webweaverService.getDefaultRedirectLayer(["/$", contextPath + "$"]));
     //
-    webweaverPortlet.push(layerware, portletConfig.priority);
+    webweaverService.push(layerware, portletConfig.priority);
   }
 }
-
-Service.referenceHash = {
-  configPortletifier: "consformer",
-  restfrontHandler: "handler",
-  webweaverService: "app-webweaver/webweaverService"
-};
 
 module.exports = Service;
