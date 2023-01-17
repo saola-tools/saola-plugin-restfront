@@ -24,7 +24,7 @@
     "check": "npm exec -- eslint ./src index.js",
     "check-silent": "npm exec -- eslint --quiet ./src index.js",
     "pretest": "npm run clean && NODE_ENV=${DEVEBOT_NODE_ENV:-test} npm run build",
-    "testOnly": "npm --prefix=test exec -- mocha --recursive ./**/tdd/*-test.js",
+    "testOnly": "npm --prefix=test exec -- mocha --recursive ./test/tdd/*-test.js ./test/bdd/*-test.js",
     "test": "npm run testOnly",
     "prepublishOnly": "npm run check-silent && npm run clean && NODE_ENV=${DEVEBOT_NODE_ENV:-production} npm run build",
     "verify": "npm run prepublishOnly && npm run testOnly"

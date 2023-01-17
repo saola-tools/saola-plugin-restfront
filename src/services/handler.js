@@ -7,18 +7,15 @@ const lodash = Devebot.require("lodash");
 const Validator = require("schema-validator");
 const path = require("path");
 
-const portlet = require("app-webserver").require("portlet");
-const { PORTLETS_COLLECTION_NAME, PortletMixiner } = portlet;
+const { PortletMixiner } = require("app-webserver").require("portlet");
 const { isPureObject, parseUserAgent } = require("../utils");
 
 function Handler (params = {}) {
   const { packageName, loggingFactory, configPortletifier, tracelogService, webweaverService } = params;
   const { sandboxRegistry, errorManager, mappingLoader, schemaValidator } = params;
 
-  const pluginConfig = configPortletifier.getPluginConfig();
-
   PortletMixiner.call(this, {
-    portletDescriptors: lodash.get(pluginConfig, PORTLETS_COLLECTION_NAME),
+    portletDescriptors: configPortletifier.getPortletDescriptors(),
     portletReferenceHolders: { webweaverService, tracelogService },
     portletArguments: {
       packageName, loggingFactory,
@@ -276,7 +273,7 @@ function buildMiddlewareFromMapping (context, mapping) {
     }
     const requestId = tracelogService.getRequestId(req);
     const reqTR = T.branch({ key: "requestId", value: requestId });
-    L && L.has("info") && L.log("info", reqTR.add({
+    L && L.has("info") && L.log("info", reqTR && reqTR.add({
       mapPath: mapping.path,
       mapMethod: mapping.method,
       url: req.url,
@@ -395,7 +392,7 @@ function buildMiddlewareFromMapping (context, mapping) {
       promize = promize.then(function (packet) {
         renderPacketToResponse(packet, res);
         //
-        L && L.has("trace") && L.log("trace", reqTR.toMessage({
+        L && L.has("trace") && L.log("trace", reqTR && reqTR.toMessage({
           text: "Req[${requestId}] is completed"
         }));
         //
@@ -409,7 +406,7 @@ function buildMiddlewareFromMapping (context, mapping) {
     }
 
     promize = promize.catch(Promise.TimeoutError, function() {
-      L && L.has("error") && L.log("error", reqTR.add({
+      L && L.has("error") && L.log("error", reqTR && reqTR.add({
         timeout: reqOpts.timeout
       }).toMessage({
         text: "Req[${requestId}] has timeout after ${timeout} seconds"
@@ -431,7 +428,7 @@ function buildMiddlewareFromMapping (context, mapping) {
       // Render the packet
       packet.statusCode = packet.statusCode || 500;
       renderPacketToResponse(packet, res);
-      L && L.has("error") && L.log("error", reqTR.add(packet).toMessage({
+      L && L.has("error") && L.log("error", reqTR && reqTR.add(packet).toMessage({
         text: "Req[${requestId}] has failed, status[${statusCode}], headers: ${headers}, body: ${body}"
       }));
       //
@@ -439,7 +436,7 @@ function buildMiddlewareFromMapping (context, mapping) {
     });
 
     promize.finally(function () {
-      L && L.has("silly") && L.log("silly", reqTR.toMessage({
+      L && L.has("silly") && L.log("silly", reqTR && reqTR.toMessage({
         text: "Req[${requestId}] end"
       }));
     });

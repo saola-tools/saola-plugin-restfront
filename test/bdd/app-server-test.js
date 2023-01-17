@@ -19,11 +19,9 @@ describe("app.server", function() {
     chores.clearCache();
   });
   //
-  it("app.server should be started/stopped properly", function(done) {
-    app.server.start().then(function() {
+  it("app.server should be started/stopped properly", function() {
+    return app.server.start().then(function() {
       return app.server.stop();
-    }).then(function() {
-      done();
     });
   });
 });
