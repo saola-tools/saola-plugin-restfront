@@ -27,6 +27,11 @@ export DEVEBOT_SANDBOX=new-mappings
 npm run clean && npm run build && node test/app/example
 ```
 
+```shell
+export DEVEBOT_SANDBOX=new-mappings,portlets
+npm run clean && npm run build && node test/app/example
+```
+
 or start the example server with mocking functions:
 
 ```shell

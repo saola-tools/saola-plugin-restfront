@@ -15,13 +15,14 @@ const mappings = {
       input: {
         preValidator: function (req, reqOpts, services) {
           const demoAction = req.get("X-Demo-Action");
-          const L = services.logger;
-          const T = services.tracer;
-          L.has("debug") && L.log("debug", T.add({
+          //
+          const { logger: L, tracer: T } = services || {};
+          L && L.has("debug") && L.log("debug", T && T.add({
             demoAction, requestId: reqOpts.requestId
           }).toMessage({
             tmpl: "preValidator[${requestId}] the demoAction: [${demoAction}] has been captured"
           }));
+          //
           if (demoAction === "pre-validation-failed") {
             return {
               valid: false,
@@ -31,9 +32,8 @@ const mappings = {
           return true;
         },
         transform: function (req, reqOpts, services) {
-          const L = services.logger;
-          const T = services.tracer;
-          L.has("debug") && L.log("debug", T.add({
+          const { logger: L, tracer: T } = services || {};
+          L && L.has("debug") && L.log("debug", T && T.add({
             requestId: reqOpts.requestId
           }).toMessage({
             tmpl: "transform[${requestId}] the request is transforming"
@@ -41,9 +41,8 @@ const mappings = {
           return { number: req.params.number };
         },
         postValidator: function (data, reqOpts, services) {
-          const L = services.logger;
-          const T = services.tracer;
-          L.has("debug") && L.log("debug", T.add(reqOpts).toMessage({
+          const { logger: L, tracer: T } = services || {};
+          L && L.has("debug") && L.log("debug", T && T.add(reqOpts).toMessage({
             tmpl: "postValidator[${requestId}] is invoked"
           }));
           if (data && data.number >= 49) {

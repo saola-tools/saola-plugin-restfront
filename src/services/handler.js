@@ -12,9 +12,10 @@ const { isPureObject, parseUserAgent } = require("../utils");
 
 function Handler (params = {}) {
   const { packageName, loggingFactory, configPortletifier, tracelogService, webweaverService } = params;
-  const { sandboxRegistry, errorManager, mappingLoader, schemaValidator } = params;
+  const { sandboxRegistry, sandboxOrigin, errorManager, mappingLoader, schemaValidator } = params;
 
   PortletMixiner.call(this, {
+    portletBaseConfig: sandboxOrigin,
     portletDescriptors: configPortletifier.getPortletDescriptors(),
     portletReferenceHolders: { webweaverService, tracelogService },
     portletArguments: {
@@ -55,9 +56,9 @@ function Portlet (params = {}) {
   const T = loggingFactory.getTracer();
   const blockRef = chores.getBlockRef(__filename, packageName || "app-restfront");
 
-  L && L.has("silly") && L.log("silly", T && T.add({ portletName }).toMessage({
-    tags: [ blockRef ],
-    text: "The Portlet[${portletName}] is available"
+  L && L.has("silly") && L.log("silly", T && T.add({ blockRef, portletName }).toMessage({
+    tags: [ blockRef, portletName ],
+    text: "The Portlet[${blockRef}][${portletName}] is available"
   }));
 
   const mappingHash = sanitizeMappings(mappingLoader.loadMappings(portletConfig.mappingStore));
@@ -124,6 +125,12 @@ function Portlet (params = {}) {
   this.buildRestRouter = function (express) {
     const router = express.Router();
     lodash.forEach(mappings, function (mapping) {
+      L && L.has("info") && L.log("info", T && T.add({
+        mapPath: mapping.path,
+        mapMethod: mapping.method
+      }).toMessage({
+        text: "Route[${mapMethod}][${mapPath}] is mapped"
+      }));
       router.all(mapping.path, buildMiddlewareFromMapping(CTX, mapping));
     });
     return router;
@@ -573,6 +580,9 @@ function extractRequestOptions (req, requestOptions, opts = {}, errors) {
     let requestOption = requestOptions[optionKey];
     if (lodash.isString(requestOption)) {
       requestOption = { headerName: requestOption };
+    }
+    if (lodash.isEmpty(requestOption.headerName)) {
+      continue;
     }
     const optionName = requestOption.optionName || optionKey;
     const optionValue = req.get(requestOption.headerName);

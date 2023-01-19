@@ -8,10 +8,11 @@ const path = require("path");
 const { PortletMixiner } = require("app-webserver").require("portlet");
 
 function Service (params = {}) {
-  const { packageName, loggingFactory, configPortletifier, restfrontHandler, webweaverService } = params;
+  const { packageName, loggingFactory, sandboxOrigin, configPortletifier, restfrontHandler, webweaverService } = params;
   const express = webweaverService.express;
 
   PortletMixiner.call(this, {
+    portletBaseConfig: sandboxOrigin,
     portletDescriptors: configPortletifier.getPortletDescriptors(),
     portletReferenceHolders: { restfrontHandler, webweaverService },
     portletArguments: { packageName, loggingFactory, express },
@@ -50,15 +51,15 @@ function Portlet (params = {}) {
   const T = loggingFactory.getTracer();
   const blockRef = chores.getBlockRef(__filename, packageName || "app-restfront");
 
-  L && L.has("silly") && L.log("silly", T && T.add({ portletName }).toMessage({
-    tags: [ blockRef ],
-    text: "The Portlet[${portletName}] is available"
-  }));
-
   const contextPath = portletConfig.contextPath || "/restfront";
   const apiPath = portletConfig.apiPath || "";
   const apiFullPath = path.join(contextPath, apiPath);
   const staticpages = portletConfig.static;
+
+  L && L.has("silly") && L.log("silly", T && T.add({ blockRef, portletName, apiFullPath }).toMessage({
+    tags: [ blockRef ],
+    text: "The Portlet[${blockRef}][${portletName}] is available for: '${apiFullPath}'"
+  }));
 
   this.getAssetsLayer = function(webpath, filepath, index) {
     return {

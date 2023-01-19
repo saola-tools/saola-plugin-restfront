@@ -5,25 +5,25 @@ const Promise = Devebot.require("bluebird");
 const chores = Devebot.require("chores");
 const Fibonacci = require("../utils/fibonacci");
 
-const Service = function(params) {
-  params = params || {};
+const Service = function(params = {}) {
+  const { loggingFactory, packageName, sandboxConfig, errorManager } = params;
 
-  const L = params.loggingFactory.getLogger();
-  const T = params.loggingFactory.getTracer();
-  const blockRef = chores.getBlockRef(__filename, params.packageName);
+  const L = loggingFactory.getLogger();
+  const T = loggingFactory.getTracer();
+  const blockRef = chores.getBlockRef(__filename, packageName);
 
-  params.errorManager.register(params.packageName, {
+  errorManager.register(packageName, {
     errorCodes: params.sandboxConfig.errorCodes
   });
 
-  params.errorManager.register("otherErrorSource", {
-    errorCodes: params.sandboxConfig.otherErrorSource
+  errorManager.register("otherErrorSource", {
+    errorCodes: sandboxConfig.otherErrorSource
   });
 
   this.fibonacci = function(data, opts) {
     opts = opts || {};
     const reqTr = T.branch({ key: "requestId", value: opts.requestId || T.getLogID() });
-    L.has("debug") && L.log("debug", reqTr.add({ data: data }).toMessage({
+    L && L.has("debug") && L.log("debug", reqTr.add({ data: data }).toMessage({
       tags: [ blockRef, "fibonacci" ],
       text: " - fibonacci[${requestId}] is invoked with parameters: ${data}"
     }));
@@ -36,7 +36,7 @@ const Service = function(params) {
     const fibonacci = new Fibonacci(data);
     const result = fibonacci.finish();
     result.actionId = data.actionId;
-    L.has("debug") && L.log("debug", reqTr.add({ result: result }).toMessage({
+    L && L.has("debug") && L.log("debug", reqTr.add({ result: result }).toMessage({
       tags: [ blockRef, "fibonacci" ],
       text: " - fibonacci[${requestId}] result: ${result}"
     }));
