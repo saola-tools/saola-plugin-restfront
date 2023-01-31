@@ -12,7 +12,7 @@ module.exports = {
     }
   },
   plugins: {
-    appRestfront: {
+    pluginRestfront: {
       services: {
         handler: {
           methods: {

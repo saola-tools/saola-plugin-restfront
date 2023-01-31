@@ -4,7 +4,7 @@ const path = require("path");
 
 module.exports = {
   plugins: {
-    appRestfront: {
+    pluginRestfront: {
       mappingStore: {
         "example-mappings": path.join(__dirname, "../lib/mappings/req-to-rpc")
       }

@@ -1,5 +1,5 @@
-# app-restfront
+# @saola/plugin-restfront
 
-> Devebot application restfront layerware
+> Saola restfront plugin layerware
 
-![Architecture](https://raw.github.com/apporo/app-restfront/master/docs/modules/ROOT/assets/images/arch.png)
+![Architecture](https://raw.github.com/saolajs/saola-plugin-restfront/master/docs/modules/ROOT/assets/images/arch.png)

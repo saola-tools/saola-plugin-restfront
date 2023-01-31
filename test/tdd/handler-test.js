@@ -1,9 +1,9 @@
 "use strict";
 
-const devebot = require("devebot");
-const Promise = devebot.require("bluebird");
-const lodash = devebot.require("lodash");
-const chores = devebot.require("chores");
+const Devebot = require("@saola/core");
+const Promise = Devebot.require("bluebird");
+const lodash = Devebot.require("lodash");
+const chores = Devebot.require("chores");
 const { assert, mockit, sinon } = require("liberica");
 
 const Fibonacci = require("../lib/fibonacci");
@@ -31,11 +31,11 @@ describe("handler", function() {
     "contextPath": "/restfront",
     "apiPath": "rest",
     "mappingStore": {
-      "devebot-application": "app-restfront/test/app/example/lib/mappings/req-to-rpc"
+      "Devebot-application": "saola-plugin-restfront/test/app/example/lib/mappings/req-to-rpc"
     },
     "static": {
-      "apidoc": "app-restfront/test/app/example/public/apidoc",
-      "assets": "app-restfront/test/app/example/public/assets"
+      "apidoc": "saola-plugin-restfront/test/app/example/public/apidoc",
+      "assets": "saola-plugin-restfront/test/app/example/public/assets"
     },
     "requestOptions": {
       "requestId": {
@@ -116,7 +116,7 @@ describe("handler", function() {
 
     it("Merge a list of apiMaps into an array of mappings", function() {
       const mappingHash = {
-        "devebot-application": {
+        "Devebot-application": {
           "apiMaps": [
             {
               "path": "/sub/:apiVersion/fibonacci/calc/:number",
@@ -189,7 +189,7 @@ describe("handler", function() {
           "error": {
             "mutate": {}
           },
-          "errorSource": "devebot-application"
+          "errorSource": "Devebot-application"
         },
         {
           "path": "/git/:apiVersion/group/:groupName",
@@ -803,7 +803,7 @@ describe("handler", function() {
       }
     };
     const ctx = {
-      blockRef: "app-restfront/handler",
+      blockRef: "@saola/plugin-restfront/handler",
       L: loggingFactory.getLogger(),
       T: loggingFactory.getTracer(),
       portletConfig, errorManager, errorBuilder, serviceSelector, tracelogService,
@@ -814,7 +814,7 @@ describe("handler", function() {
 
     beforeEach(function() {
       chores.setEnvironments({
-        DEVEBOT_ENV: "development"
+        SAOLA_ENV: "development"
       });
       Handler = mockit.acquire("handler", { libraryDir: "../lib" });
       buildMiddlewareFromMapping = mockit.get(Handler, "buildMiddlewareFromMapping");
@@ -1938,8 +1938,8 @@ describe("handler", function() {
 
     beforeEach(function() {
       chores.setEnvironments({
-        DEVEBOT_ENV: "development",
-        DEVEBOT_UPGRADE_ENABLED: "app-restfront-legacy-error-to-response",
+        SAOLA_ENV: "development",
+        SAOLA_UPGRADE_ENABLED: "saola-plugin-restfront-legacy-error-to-response",
       });
       Handler = mockit.acquire("handler", { libraryDir: "../lib" });
       transformErrorToPacket = mockit.get(Handler, "transformErrorToPacket");

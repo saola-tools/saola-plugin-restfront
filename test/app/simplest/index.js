@@ -2,11 +2,11 @@
 
 const path = require("path");
 
-const app = require("devebot").launchApplication({
+const app = require("@saola/core").launchApplication({
   appRootPath: __dirname
 }, [
   {
-    name: "app-restfront",
+    name: "@saola/plugin-restfront",
     path: path.join(__dirname, "../../../index.js")
   },
 ]);

@@ -1,6 +1,6 @@
-ifndef::saola-platform-name[:saola-platform-name: Devebot Platform]
+ifndef::saola-platform-name[:saola-platform-name: Saola Platform]
 ifndef::saola-plugin-restfront-name[:saola-plugin-restfront-name: Restfront]
-ifndef::saola-plugin-restfront-code[:saola-plugin-restfront-code: app-restfront]
+ifndef::saola-plugin-restfront-code[:saola-plugin-restfront-code: @saola/plugin-restfront]
 
 = Tổng quan
 

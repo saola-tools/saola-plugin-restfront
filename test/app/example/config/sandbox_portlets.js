@@ -6,7 +6,7 @@ const apiPath = "rest";
 
 module.exports = {
   plugins: {
-    appRestfront: {
+    pluginRestfront: {
       portlets: {
         default: {},
         formula: {
@@ -18,7 +18,7 @@ module.exports = {
         }
       }
     },
-    appTracelog: {
+    pluginLogtracer: {
       portlets: {
         default: {},
         formula: {
@@ -27,13 +27,13 @@ module.exports = {
         }
       }
     },
-    appWebweaver: {
+    pluginWebweaver: {
       portlets: {
         default: {},
         formula: {}
       }
     },
-    appWebserver: {
+    pluginWebserver: {
       portlets: {
         default: {},
         formula: {

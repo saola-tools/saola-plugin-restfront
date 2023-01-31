@@ -32,11 +32,11 @@ module.exports = {
     }
   },
   plugins: {
-    appRestfront: {
+    pluginRestfront: {
       contextPath: contextPath,
       apiPath: apiPath,
       mappingStore: {
-        "devebot-application": path.join(__dirname, "../lib/mappings/req-to-rpc")
+        "saola-application": path.join(__dirname, "../lib/mappings/req-to-rpc")
       },
       static: {
         "apidoc": path.join(__dirname, "../public/apidoc"),
@@ -49,7 +49,7 @@ module.exports = {
       specificationFile: path.join(__dirname, "../data/api-docs/swagger.json"),
       uiType: "swagger-ui-express", // 'swagger-tools'
     },
-    appTracelog: {
+    pluginLogtracer: {
       tracingPaths: [ path.join(contextPath, apiPath) ],
       tracingBoundaryEnabled: true
     }

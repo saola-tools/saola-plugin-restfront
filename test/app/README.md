@@ -1,8 +1,8 @@
-## app-restfront example
+## @saola/plugin-restfront example
 
 ### Run the example
 
-Install the dependencies of app-restfront:
+Install the dependencies of @saola/plugin-restfront:
 
 ```shell
 npm install
@@ -11,31 +11,31 @@ npm install
 Show all of log messages:
 
 ```shell
-export DEBUG=devebot*,app*
+export DEBUG=saola*,app*
 export LOGOLITE_DEBUGLOG_ENABLED=true
 ```
 
 Start the example server:
 
 ```shell
-export DEVEBOT_SANDBOX=old-mappings
+export SAOLA_SANDBOX=old-mappings
 npm run clean && npm run build && node test/app/example
 ```
 
 ```shell
-export DEVEBOT_SANDBOX=new-mappings
+export SAOLA_SANDBOX=new-mappings
 npm run clean && npm run build && node test/app/example
 ```
 
 ```shell
-export DEVEBOT_SANDBOX=new-mappings,portlets
+export SAOLA_SANDBOX=new-mappings,portlets
 npm run clean && npm run build && node test/app/example
 ```
 
 or start the example server with mocking functions:
 
 ```shell
-DEVEBOT_TEXTURE=mock node test/app/example
+SAOLA_TEXTURE=mock node test/app/example
 ```
 
 ```shell

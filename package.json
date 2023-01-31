@@ -1,12 +1,12 @@
 {
-  "name": "app-restfront",
+  "name": "@saola/plugin-restfront",
   "version": "0.4.2",
-  "description": "Devebot application restfront layerware",
-  "homepage": "https://github.com/apporo/app-restfront.git",
+  "description": "Saola restfront plugin layerware",
+  "homepage": "https://github.com/saolajs/saola-plugin-restfront.git",
   "author": {
-    "name": "apporo",
-    "email": "apporo@devebot.com",
-    "url": "https://github.com/apporo"
+    "name": "SaolaJS",
+    "email": "contact@saolajs.com",
+    "url": "https://github.com/saolajs"
   },
   "main": "index.js",
   "files": [
@@ -24,25 +24,25 @@
     "build": "npm exec -- babel ./src -d ./lib",
     "check": "npm exec -- eslint ./src index.js",
     "check-silent": "npm exec -- eslint --quiet ./src index.js",
-    "pretest": "npm run clean && NODE_ENV=${DEVEBOT_NODE_ENV:-test} npm run build",
+    "pretest": "npm run clean && NODE_ENV=${SAOLA_NODE_ENV:-test} npm run build",
     "testOnly": "npm --prefix=test exec -- mocha --recursive ./test/tdd/*-test.js ./test/bdd/*-test.js",
     "test": "npm run testOnly",
-    "prepublishOnly": "npm run check-silent && npm run clean && NODE_ENV=${DEVEBOT_NODE_ENV:-production} npm run build",
+    "prepublishOnly": "npm run check-silent && npm run clean && NODE_ENV=${SAOLA_NODE_ENV:-production} npm run build",
     "verify": "npm run prepublishOnly && npm run testOnly"
   },
   "keywords": [
-    "devebot",
-    "devebot-plugin"
+    "saola",
+    "saola-plugin"
   ],
   "peerDependencies": {
-    "app-errorlist": "^0.4.0",
-    "app-tracelog": "^0.4.0",
-    "devebot": "^0.4.0"
+    "@saola/core": "^0.4.0",
+    "@saola/plugin-errorlist": "^0.4.0",
+    "@saola/plugin-logtracer": "^0.4.0"
   },
   "dependencies": {
-    "app-errorlist": "^0.4.0",
-    "app-tracelog": "^0.4.0",
-    "devebot": "^0.4.0",
+    "@saola/core": "^0.4.0",
+    "@saola/plugin-errorlist": "^0.4.0",
+    "@saola/plugin-logtracer": "^0.4.0",
     "schema-validator": "3.3.1",
     "ua-parser-js": "1.0.32"
   },

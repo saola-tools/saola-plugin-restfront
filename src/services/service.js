@@ -1,11 +1,11 @@
 "use strict";
 
-const Devebot = require("devebot");
+const Devebot = require("@saola/core");
 const lodash = Devebot.require("lodash");
 const chores = Devebot.require("chores");
 const path = require("path");
 
-const { PortletMixiner } = require("app-webserver").require("portlet");
+const { PortletMixiner } = require("@saola/plugin-webserver").require("portlet");
 
 function Service (params = {}) {
   const { packageName, loggingFactory, sandboxOrigin, configPortletifier, restfrontHandler, webweaverService } = params;
@@ -40,7 +40,7 @@ Object.assign(Service.prototype, PortletMixiner.prototype);
 Service.referenceHash = {
   configPortletifier: "portletifier",
   restfrontHandler: "handler",
-  webweaverService: "app-webweaver/webweaverService"
+  webweaverService: "@saola/plugin-webweaver/webweaverService"
 };
 
 function Portlet (params = {}) {
@@ -49,7 +49,7 @@ function Portlet (params = {}) {
 
   const L = loggingFactory.getLogger();
   const T = loggingFactory.getTracer();
-  const blockRef = chores.getBlockRef(__filename, packageName || "app-restfront");
+  const blockRef = chores.getBlockRef(__filename, packageName);
 
   const contextPath = portletConfig.contextPath || "/restfront";
   const apiPath = portletConfig.apiPath || "";
@@ -63,7 +63,7 @@ function Portlet (params = {}) {
 
   this.getAssetsLayer = function(webpath, filepath, index) {
     return {
-      name: "app-restfront-service-assets~" + index,
+      name: "saola-plugin-restfront-service-assets~" + index,
       path: path.join(contextPath, webpath),
       middleware: express.static(filepath)
     };
@@ -71,7 +71,7 @@ function Portlet (params = {}) {
 
   this.getValidator = function() {
     return {
-      name: "app-restfront-handler-validator",
+      name: "saola-plugin-restfront-handler-validator",
       path: apiFullPath,
       middleware: restfrontHandler.validator(express)
     };
@@ -79,7 +79,7 @@ function Portlet (params = {}) {
 
   this.getRestLayer = function() {
     return {
-      name: "app-restfront-handler-restapi",
+      name: "saola-plugin-restfront-handler-restapi",
       path: apiFullPath,
       middleware: restfrontHandler.buildRestRouter(express)
     };

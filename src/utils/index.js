@@ -1,7 +1,7 @@
 "use strict";
 
 const uaParser = require("ua-parser-js");
-const Devebot = require("devebot");
+const Devebot = require("@saola/core");
 const lodash = Devebot.require("lodash");
 
 function isPureObject (o) {

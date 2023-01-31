@@ -1,1 +1,1 @@
-* xref:app-restfront:index.adoc[Tổng quan]
+* xref:saola-plugin-restfront:index.adoc[Tổng quan]

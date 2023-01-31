@@ -1,5 +1,5 @@
-module.exports = require("devebot").registerLayerware(__dirname, [
-  "app-errorlist",
-  "app-tracelog",
-  "app-webweaver"
+module.exports = require("@saola/core").registerLayerware(__dirname, [
+  "@saola/plugin-errorlist",
+  "@saola/plugin-logtracer",
+  "@saola/plugin-webweaver"
 ], []);

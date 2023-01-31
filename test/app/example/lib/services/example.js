@@ -1,6 +1,6 @@
 "use strict";
 
-const Devebot = require("devebot");
+const Devebot = require("@saola/core");
 const Promise = Devebot.require("bluebird");
 const chores = Devebot.require("chores");
 const Fibonacci = require("../utils/fibonacci");
@@ -48,7 +48,7 @@ const Service = function(params = {}) {
 };
 
 Service.referenceHash = {
-  errorManager: "app-errorlist/manager"
+  errorManager: "@saola/plugin-errorlist/manager"
 };
 
 module.exports = Service;

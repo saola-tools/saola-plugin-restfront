@@ -2,7 +2,7 @@
 
 module.exports = {
   plugins: {
-    appRestfront: {
+    pluginRestfront: {
       mappingStore: require("path").join(__dirname, "../lib/mappings/req-to-rpc-deprecated")
     }
   }

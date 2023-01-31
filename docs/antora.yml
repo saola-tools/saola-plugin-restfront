@@ -1,5 +1,5 @@
-name: app-restfront
-title: "Devebot Plugin: Restfront"
+name: @saola/plugin-restfront
+title: "Saola Plugin: Restfront"
 version: master
 nav:
 - modules/ROOT/nav.adoc

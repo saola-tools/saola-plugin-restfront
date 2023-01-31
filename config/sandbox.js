@@ -1,6 +1,6 @@
 module.exports = {
   plugins: {
-    appRestfront: {
+    pluginRestfront: {
       requestOptions: {
         requestId: {
           headerName: "X-Request-Id",

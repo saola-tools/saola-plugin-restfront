@@ -1,13 +1,13 @@
 "use strict";
 
-const Devebot = require("devebot");
+const Devebot = require("@saola/core");
 const Promise = Devebot.require("bluebird");
 const chores = Devebot.require("chores");
 const lodash = Devebot.require("lodash");
 const Validator = require("schema-validator");
 const path = require("path");
 
-const { PortletMixiner } = require("app-webserver").require("portlet");
+const { PortletMixiner } = require("@saola/plugin-webserver").require("portlet");
 const { isPureObject, parseUserAgent } = require("../utils");
 
 function Handler (params = {}) {
@@ -40,12 +40,12 @@ Object.assign(Handler.prototype, PortletMixiner.prototype);
 
 Handler.referenceHash = {
   configPortletifier: "portletifier",
-  errorManager: "app-errorlist/manager",
-  mappingLoader: "devebot/mappingLoader",
-  sandboxRegistry: "devebot/sandboxRegistry",
-  schemaValidator: "devebot/schemaValidator",
-  tracelogService: "app-tracelog/tracelogService",
-  webweaverService: "app-webweaver/webweaverService"
+  errorManager: "@saola/plugin-errorlist/manager",
+  mappingLoader: "@saola/core/mappingLoader",
+  sandboxRegistry: "@saola/core/sandboxRegistry",
+  schemaValidator: "@saola/core/schemaValidator",
+  tracelogService: "@saola/plugin-logtracer/tracelogService",
+  webweaverService: "@saola/plugin-webweaver/webweaverService"
 };
 
 function Portlet (params = {}) {
@@ -54,7 +54,7 @@ function Portlet (params = {}) {
 
   const L = loggingFactory.getLogger();
   const T = loggingFactory.getTracer();
-  const blockRef = chores.getBlockRef(__filename, packageName || "app-restfront");
+  const blockRef = chores.getBlockRef(__filename, packageName);
 
   L && L.has("silly") && L.log("silly", T && T.add({ blockRef, portletName }).toMessage({
     tags: [ blockRef, portletName ],
@@ -693,7 +693,7 @@ function transformErrorToPacketModern (failed, mapping, req, reqOpts, services, 
 
 let transformErrorToPacket = transformErrorToPacketModern;
 
-if (chores.isUpgradeSupported("app-restfront-legacy-error-to-response")) {
+if (chores.isUpgradeSupported("saola-plugin-restfront-legacy-error-to-response")) {
   transformErrorToPacket = transformErrorToPacketLegacy;
 }
 
