@@ -12,10 +12,10 @@ const { isPureObject, parseUserAgent } = require("../utils");
 
 function Handler (params = {}) {
   const { packageName, loggingFactory, configPortletifier, tracelogService, webweaverService } = params;
-  const { sandboxRegistry, sandboxOrigin, errorManager, mappingLoader, schemaValidator } = params;
+  const { sandboxRegistry, errorManager, mappingLoader, schemaValidator } = params;
 
   PortletMixiner.call(this, {
-    portletBaseConfig: sandboxOrigin,
+    portletBaseConfig: configPortletifier.getPortletBaseConfig(),
     portletDescriptors: configPortletifier.getPortletDescriptors(),
     portletReferenceHolders: { webweaverService, tracelogService },
     portletArguments: {

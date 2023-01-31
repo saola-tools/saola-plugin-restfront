@@ -18,7 +18,7 @@
   ],
   "scripts": {
     "clean": "rm -rf ./lib",
-    "clean-modules": "rm -rf ./node_modules && rm ./package-lock.json",
+    "clean-modules": "rm -rf ./node_modules ./package-lock.json",
     "reset-modules": "npm run clean-modules && npm install --ignore-scripts",
     "bootstrap": "npm install --ignore-scripts; npm --prefix=test install --ignore-scripts",
     "build": "npm exec -- babel ./src -d ./lib",

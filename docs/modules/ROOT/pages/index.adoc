@@ -1,9 +1,13 @@
+ifndef::saola-platform-name[:saola-platform-name: Devebot Platform]
+ifndef::saola-plugin-restfront-name[:saola-plugin-restfront-name: Restfront]
+ifndef::saola-plugin-restfront-code[:saola-plugin-restfront-code: app-restfront]
+
 = Tổng quan
 
-`Restfront` là một thành phần cắm thêm (plugin) của Devebot Platform.
-Nhiệm vụ chính của `app-restfront` là cho phép developer có thể dễ dàng định nghĩa các Rest API bằng khai báo JSON trong cấu hình (configuration).
+`{saola-plugin-restfront-name}` là một thành phần cắm thêm (plugin) của {saola-platform-name}.
+Nhiệm vụ chính của `{saola-plugin-restfront-code}` là cho phép developer có thể dễ dàng định nghĩa các Rest API bằng khai báo JSON trong cấu hình (configuration).
 
-Kiến trúc của app-restfront được minh họa theo sơ đồ sau:
+Kiến trúc của {saola-plugin-restfront-code} được minh họa theo sơ đồ sau:
 
 image::arch.png[]
 
@@ -17,7 +21,7 @@ Các khai báo này sẽ cung cấp thông số cho từng điểm vào (entrypo
 - *methodName*: Tên của hàm sẽ được gọi để xử lý Rest request;
 - *output*: Khai báo hàm `transform` để chuyển đổi dữ liệu trả về từ hàm Javascript thành đầu ra cho Rest HTTP response.
 
-Restfront thường được sử dụng trong trường hợp dự án đã có sẵn chức năng đã được lập trình và đóng gói thành thư viện, cung cấp chức năng dưới dạng các hàm của một đối tượng dịch vụ (service) của một Devebot Plugin nào đó.
+{saola-plugin-restfront-name} thường được sử dụng trong trường hợp dự án đã có sẵn chức năng đã được lập trình và đóng gói thành thư viện, cung cấp chức năng dưới dạng các hàm của một đối tượng dịch vụ (service) của một Devebot Plugin nào đó.
 Khi đó developer chỉ việc cài đặt thêm Restfront, khai báo cấu hình ánh xạ (mappings) từ Rest API vào các hàm chức năng sẵn có là có luôn một bộ Rest API mở cho các dịch vụ bên ngoài gọi vào.
 
 ////
