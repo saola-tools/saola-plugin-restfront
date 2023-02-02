@@ -40,10 +40,10 @@ Object.assign(Handler.prototype, PortletMixiner.prototype);
 
 Handler.referenceHash = {
   configPortletifier: "portletifier",
-  errorManager: "@saola/plugin-errorlist/manager",
   mappingLoader: "@saola/core/mappingLoader",
   sandboxRegistry: "@saola/core/sandboxRegistry",
   schemaValidator: "@saola/core/schemaValidator",
+  errorManager: "@saola/plugin-errorlist/manager",
   tracelogService: "@saola/plugin-logtracer/tracelogService",
   webweaverService: "@saola/plugin-webweaver/webweaverService"
 };
@@ -257,7 +257,7 @@ function isMethodIncluded (methods, reqMethod) {
 function buildMiddlewareFromMapping (context, mapping) {
   context = context || {};
 
-  const { portletName, portletConfig } = context;
+  const { portletConfig } = context;
   const { L, T, errorManager, errorBuilder, serviceSelector, schemaValidator, tracelogService, verbose } = context;
 
   const timeout = mapping.timeout || portletConfig.defaultTimeout;

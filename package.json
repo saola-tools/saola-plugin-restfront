@@ -18,9 +18,9 @@
   ],
   "scripts": {
     "clean": "rm -rf ./lib",
-    "clean-modules": "rm -rf ./node_modules ./package-lock.json",
-    "reset-modules": "npm run clean-modules && npm install --ignore-scripts",
-    "bootstrap": "npm install --ignore-scripts; npm --prefix=test install --ignore-scripts",
+    "clean-modules": "rm -rf ./node_modules ./package-lock.json ./test/node_modules ./test/package-lock.json",
+    "setup-modules": "npm install --ignore-scripts; npm --prefix=test install --ignore-scripts",
+    "reset-modules": "npm run clean-modules && npm run setup-modules",
     "build": "npm exec -- babel ./src -d ./lib",
     "check": "npm exec -- eslint ./src index.js",
     "check-silent": "npm exec -- eslint --quiet ./src index.js",
@@ -37,7 +37,8 @@
   "peerDependencies": {
     "@saola/core": "^0.4.0",
     "@saola/plugin-errorlist": "^0.4.0",
-    "@saola/plugin-logtracer": "^0.4.0"
+    "@saola/plugin-logtracer": "^0.4.0",
+    "@saola/plugin-webserver": "^0.4.0"
   },
   "dependencies": {
     "@saola/core": "^0.4.0",
