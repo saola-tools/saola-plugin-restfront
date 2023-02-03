@@ -31,7 +31,7 @@ describe("handler", function() {
     "contextPath": "/restfront",
     "apiPath": "rest",
     "mappingStore": {
-      "Devebot-application": "saola-plugin-restfront/test/app/example/lib/mappings/req-to-rpc"
+      "devebot-application": "saola-plugin-restfront/test/app/example/lib/mappings/req-to-rpc"
     },
     "static": {
       "apidoc": "saola-plugin-restfront/test/app/example/public/apidoc",
@@ -116,7 +116,7 @@ describe("handler", function() {
 
     it("Merge a list of apiMaps into an array of mappings", function() {
       const mappingHash = {
-        "Devebot-application": {
+        "devebot-application": {
           "apiMaps": [
             {
               "path": "/sub/:apiVersion/fibonacci/calc/:number",
@@ -189,7 +189,7 @@ describe("handler", function() {
           "error": {
             "mutate": {}
           },
-          "errorSource": "Devebot-application"
+          "errorSource": "devebot-application"
         },
         {
           "path": "/git/:apiVersion/group/:groupName",
