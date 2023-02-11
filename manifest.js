@@ -1,7 +1,30 @@
+"use strict";
+
+const lodash = require("@saola/core").require("lodash");
+
+function portletifyConfigSchema (portletSchema, options) {
+  options = options || {};
+  const commonFields = lodash.pick(portletSchema, [
+    "type", "properties", "additionalProperties"
+  ]);
+  const otherFields = lodash.omit(portletSchema, lodash.keys(commonFields));
+  return lodash.merge({
+    "type": "object",
+    "properties": {
+      "portlets": {
+        "type": "object",
+        "patternProperties": {
+          "^[a-zA-Z][\\w-]*$": commonFields
+        }
+      }
+    }
+  }, commonFields, otherFields);
+}
+
 module.exports = {
   "config": {
     "validation": {
-      "schema": {
+      "schema": portletifyConfigSchema({
         "type": "object",
         "properties": {
           "contextPath": {
@@ -129,8 +152,8 @@ module.exports = {
             "type": "number"
           }
         },
-        "required": [ "mappingStore" ],
         "additionalProperties": false,
+        "required": [ "mappingStore" ],
         "definitions": {
           "requestOption": {
             "anyOf": [
@@ -164,7 +187,7 @@ module.exports = {
             "required": [ "headerName" ]
           }
         }
-      }
+      })
     }
   }
 };
