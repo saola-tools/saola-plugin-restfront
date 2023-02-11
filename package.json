@@ -1,13 +1,8 @@
 {
   "name": "@saola/plugin-restfront",
   "version": "0.4.2",
-  "description": "Saola restfront plugin layerware",
-  "homepage": "https://github.com/saolajs/saola-plugin-restfront.git",
-  "author": {
-    "name": "SaolaJS",
-    "email": "contact@saolajs.com",
-    "url": "https://github.com/saolajs"
-  },
+  "description": "Saola RestFront plugin",
+  "author": "Saola Development Team",
   "main": "index.js",
   "files": [
     "bin/",
@@ -29,6 +24,10 @@
     "test": "npm run testOnly",
     "prepublishOnly": "npm run check-silent && npm run clean && NODE_ENV=${SAOLA_NODE_ENV:-production} npm run build",
     "verify": "npm run prepublishOnly && npm run testOnly"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/saola-tools/saola-plugin-restfront.git"
   },
   "keywords": [
     "saola",
