@@ -1,7 +1,7 @@
 "use strict";
 
-const Devebot = require("@saola/core");
-const lodash = Devebot.require("lodash");
+const Core = require("@saola/core");
+const lodash = Core.require("lodash");
 const { assert, sinon } = require("liberica");
 
 function RequestMock (defs = {}) {

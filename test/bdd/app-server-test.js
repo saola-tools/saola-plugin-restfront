@@ -1,11 +1,11 @@
 "use strict";
 
-const Devebot = require("@saola/core");
-const chores = Devebot.require("chores");
+const Core = require("@saola/core");
+const chores = Core.require("chores");
 
 const app = require("../app/simplest");
 
-describe("app.server", function() {
+describe("bdd: @saola/plugin-restfront", function() {
   before(function() {
     chores.setEnvironments({
       SAOLA_FORCING_SILENT: "framework,webserver",
@@ -19,9 +19,11 @@ describe("app.server", function() {
     chores.clearCache();
   });
   //
-  it("app.server should be started/stopped properly", function() {
-    return app.server.start().then(function() {
-      return app.server.stop();
+  describe("app.server", function() {
+    it("app.server should be started/stopped properly", function() {
+      return app.server.start().then(function() {
+        return app.server.stop();
+      });
     });
   });
 });

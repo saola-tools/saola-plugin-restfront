@@ -4,7 +4,7 @@ const assert = require("liberica").assert;
 
 const { filterMethodResult } = require("../../lib/utils");
 
-describe("utils", function() {
+describe("tdd: utils", function() {
   describe("filterMethodResult()", function() {
     it("transform null object to null", function() {
         const resp = filterMethodResult()(null);

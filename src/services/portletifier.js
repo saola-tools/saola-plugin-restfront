@@ -1,5 +1,5 @@
 "use strict";
 
-const { createPortletifier } = require("@saola/plugin-webserver").require("portlet");
+const { createPortletifier } = require("@saola/core").require("portlet");
 
 module.exports = createPortletifier();

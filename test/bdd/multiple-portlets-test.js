@@ -3,10 +3,10 @@
 const axios = require("axios");
 const { assert } = require("liberica");
 
-const Devebot = require("@saola/core");
-const Promise = Devebot.require("bluebird");
-const chores = Devebot.require("chores");
-const lodash = Devebot.require("lodash");
+const Core = require("@saola/core");
+const Promise = Core.require("bluebird");
+const chores = Core.require("chores");
+const lodash = Core.require("lodash");
 
 const path = require("path");
 const freshy = require("freshy");
@@ -17,24 +17,24 @@ function requireFresh (moduleName, basePath) {
   return require(modulePath);
 }
 
-describe("@saola/plugin-restfront", function() {
+describe("bdd: @saola/plugin-restfront", function() {
+  before(function() {
+    chores.setEnvironments({
+      SAOLA_SANDBOX: "new-mappings,portlets",
+      SAOLA_UPGRADE_ENABLED: "manifest-bypassed",
+      SAOLA_FORCING_SILENT: "framework,webserver",
+      LOGOLITE_FULL_LOG_MODE: "false",
+      LOGOLITE_ALWAYS_ENABLED: "all",
+      LOGOLITE_ALWAYS_MUTED: "all"
+    });
+  });
+  //
+  after(function() {
+    chores.clearCache();
+  });
+  //
   describe("multiple-portlets", function() {
     const example = requireFresh("../app/example", __dirname);
-    //
-    before(function() {
-      chores.setEnvironments({
-        SAOLA_SANDBOX: "new-mappings,portlets",
-        SAOLA_UPGRADE_ENABLED: "manifest-bypassed",
-        SAOLA_FORCING_SILENT: "framework,webserver",
-        LOGOLITE_FULL_LOG_MODE: "false",
-        LOGOLITE_ALWAYS_ENABLED: "all",
-        LOGOLITE_ALWAYS_MUTED: "all"
-      });
-    });
-    //
-    after(function() {
-      chores.clearCache();
-    });
     //
     it("Request and response smoothly", function() {
       const expected = [

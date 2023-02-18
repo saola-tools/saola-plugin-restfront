@@ -1,18 +1,18 @@
 "use strict";
 
-const Devebot = require("@saola/core");
-const lodash = Devebot.require("lodash");
-const chores = Devebot.require("chores");
+const Core = require("@saola/core");
+const lodash = Core.require("lodash");
+const chores = Core.require("chores");
 const path = require("path");
 
-const { PortletMixiner } = require("@saola/plugin-webserver").require("portlet");
+const { PortletMixiner } = Core.require("portlet");
 
 function Service (params = {}) {
-  const { packageName, loggingFactory, sandboxOrigin, configPortletifier, restfrontHandler, webweaverService } = params;
+  const { packageName, loggingFactory, configPortletifier, restfrontHandler, webweaverService } = params;
   const express = webweaverService.express;
 
   PortletMixiner.call(this, {
-    portletBaseConfig: sandboxOrigin,
+    portletBaseConfig: configPortletifier.getPortletBaseConfig(),
     portletDescriptors: configPortletifier.getPortletDescriptors(),
     portletReferenceHolders: { restfrontHandler, webweaverService },
     portletArguments: { packageName, loggingFactory, express },

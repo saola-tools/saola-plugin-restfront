@@ -1,9 +1,9 @@
 "use strict";
 
-const Devebot = require("@saola/core");
-const Promise = Devebot.require("bluebird");
-const lodash = Devebot.require("lodash");
-const chores = Devebot.require("chores");
+const Core = require("@saola/core");
+const Promise = Core.require("bluebird");
+const lodash = Core.require("lodash");
+const chores = Core.require("chores");
 const { assert, mockit, sinon } = require("liberica");
 
 const Fibonacci = require("../lib/fibonacci");
@@ -26,7 +26,7 @@ const errorBuilder = {
   }
 };
 
-describe("handler", function() {
+describe("tdd: handler", function() {
   const portletConfig = {
     "contextPath": "/restfront",
     "apiPath": "rest",
