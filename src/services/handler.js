@@ -11,13 +11,13 @@ const { PortletMixiner } = Core.require("portlet");
 const { isPureObject, parseUserAgent } = require("../utils");
 
 function Handler (params = {}) {
-  const { packageName, loggingFactory, configPortletifier, tracelogService, webweaverService } = params;
+  const { packageName, loggingFactory, configPortletifier, tracelogService } = params;
   const { sandboxRegistry, errorManager, mappingLoader, schemaValidator } = params;
 
   PortletMixiner.call(this, {
     portletBaseConfig: configPortletifier.getPortletBaseConfig(),
     portletDescriptors: configPortletifier.getPortletDescriptors(),
-    portletReferenceHolders: { webweaverService, tracelogService },
+    portletReferenceHolders: { tracelogService },
     portletArguments: {
       packageName, loggingFactory,
       sandboxRegistry, errorManager, mappingLoader, schemaValidator
@@ -45,7 +45,6 @@ Handler.referenceHash = {
   schemaValidator: "@saola/core/schemaValidator",
   errorManager: "@saola/plugin-errorlist/manager",
   tracelogService: "@saola/plugin-logtracer/tracelogService",
-  webweaverService: "@saola/plugin-webweaver/webweaverService"
 };
 
 function Portlet (params = {}) {
@@ -60,6 +59,10 @@ function Portlet (params = {}) {
     tags: [ blockRef, portletName ],
     text: "The Portlet[${blockRef}][${portletName}] is available"
   }));
+
+  const contextPath = portletConfig.contextPath || "/restfront";
+  const apiPath = portletConfig.apiPath || "";
+  const generalPath = path.join(contextPath, apiPath);
 
   const mappingHash = sanitizeMappings(mappingLoader.loadMappings(portletConfig.mappingStore));
 
@@ -87,6 +90,14 @@ function Portlet (params = {}) {
     L, T, portletName, portletConfig,
     errorManager, errorBuilder, serviceSelector, schemaValidator, tracelogService
   };
+
+  this.getGeneralPath = function() {
+    return generalPath;
+  }
+
+  this.getMappingHash = function() {
+    return mappingHash;
+  }
 
   this.validator = function (express) {
     const router = express.Router();
@@ -122,6 +133,14 @@ function Portlet (params = {}) {
     return router;
   };
 
+  this.getValidator = function(express) {
+    return {
+      name: "saola-plugin-restfront-handler-validator",
+      path: generalPath,
+      middleware: this.validator(express)
+    };
+  };
+
   this.buildRestRouter = function (express) {
     const router = express.Router();
     lodash.forEach(mappings, function (mapping) {
@@ -134,6 +153,14 @@ function Portlet (params = {}) {
       router.all(mapping.path, buildMiddlewareFromMapping(CTX, mapping));
     });
     return router;
+  };
+
+  this.getRestLayer = function(express) {
+    return {
+      name: "saola-plugin-restfront-handler-restlayer",
+      path: generalPath,
+      middleware: this.buildRestRouter(express)
+    };
   };
 }
 
