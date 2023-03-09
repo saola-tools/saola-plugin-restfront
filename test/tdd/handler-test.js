@@ -28,7 +28,7 @@ const errorBuilder = {
 
 describe("tdd: handler", function() {
   const portletConfig = {
-    "contextPath": "/restfront",
+    "contextPath": "/example",
     "apiPath": "rest",
     "mappingStore": {
       "devebot-application": "saola-plugin-restfront/test/app/example/lib/mappings/req-to-rpc"

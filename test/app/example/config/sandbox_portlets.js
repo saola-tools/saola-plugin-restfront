@@ -1,7 +1,7 @@
 "use strict";
 
 const path = require("path");
-const contextPath = "/restfront";
+const contextPath = "/example";
 const apiPath = "rest";
 
 module.exports = {

@@ -57,7 +57,7 @@ describe("bdd: @saola/plugin-restfront", function() {
       return example.server.start().then(function() {
         return Promise.all([
           axios.request({
-            url: "http://localhost:7979/restfront/rest/sub/v2/fibonacci/calc/47",
+            url: "http://localhost:7979/example/rest/sub/v2/fibonacci/calc/47",
             method: "GET",
             headers: {
               "Content-Type": "application/json",
@@ -68,7 +68,7 @@ describe("bdd: @saola/plugin-restfront", function() {
             responseType: "json",
           }),
           axios.request({
-            url: "http://localhost:9797/restfront/rest/sub/v2/triangle-area/12/5",
+            url: "http://localhost:9797/example/rest/sub/v2/triangle-area/12/5",
             method: "GET",
             headers: {"Content-Type": "application/json"},
             data: undefined,
