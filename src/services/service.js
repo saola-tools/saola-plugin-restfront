@@ -9,13 +9,13 @@ const { PortletMixiner } = Core.require("portlet");
 
 function Service (params = {}) {
   const { packageName, loggingFactory, configPortletifier } = params;
-  const { restfrontHandler, webweaverService } = params;
+  const { restfrontHandler, restfrontSupporter, webweaverService } = params;
   const express = webweaverService.express;
 
   PortletMixiner.call(this, {
     portletBaseConfig: configPortletifier.getPortletBaseConfig(),
     portletDescriptors: configPortletifier.getPortletDescriptors(),
-    portletReferenceHolders: { restfrontHandler, webweaverService },
+    portletReferenceHolders: { restfrontHandler, restfrontSupporter, webweaverService },
     portletArguments: { packageName, loggingFactory, express },
     PortletConstructor: Portlet,
   });
@@ -41,13 +41,14 @@ Object.assign(Service.prototype, PortletMixiner.prototype);
 Service.referenceHash = {
   configPortletifier: "portletifier",
   restfrontHandler: "handler",
+  restfrontSupporter: "supporter",
   webweaverService: "@saola/plugin-webweaver/webweaverService"
 };
 
 function Portlet (params = {}) {
   const { portletName, portletConfig } = params;
   const { packageName, loggingFactory, express } = params;
-  const { restfrontHandler, webweaverService } = params;
+  const { restfrontHandler, restfrontSupporter, webweaverService } = params;
 
   const L = loggingFactory.getLogger();
   const T = loggingFactory.getTracer();
@@ -74,7 +75,7 @@ function Portlet (params = {}) {
     const staticpages = portletConfig.static;
     lodash.keys(staticpages).forEach(function(webpath, index) {
       if (lodash.isString(webpath)) {
-        const filepath = staticpages[webpath];
+        const filepath = lodash.get(staticpages, webpath);
         if (lodash.isString(filepath)) {
           layerware.push(self.getAssetsLayer(webpath, filepath, index));
         }
@@ -86,6 +87,7 @@ function Portlet (params = {}) {
       webweaverService.getUrlencodedBodyParserLayer(),
       restfrontHandler.getValidator(express),
       restfrontHandler.getRestLayer(express),
+      restfrontSupporter.getMiddleware(express),
     ]));
     //
     layerware.push(webweaverService.getDefaultRedirectLayer(["/$", contextPath + "$"]));

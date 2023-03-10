@@ -93,11 +93,11 @@ function Portlet (params = {}) {
 
   this.getGeneralPath = function() {
     return generalPath;
-  }
+  };
 
   this.getMappingHash = function() {
     return mappingHash;
-  }
+  };
 
   this.validator = function (express) {
     const router = express.Router();
