@@ -123,9 +123,8 @@ function Portlet (params = {}) {
         return;
       }
       //
-      const method = lodash.get(mapping, "method", "GET");
-      const sampleStore = lodash.get(mapping, "sample", {});
-      if (!lodash.isFunction(sampleStore.getScenario)) {
+      const renderer = new Renderer({ urlObject, pathPattern: tmplPath, descriptor: mapping });
+      if (!renderer.isSampleAvailable()) {
         if (format === "curl") {
           res.set("Content-Type", "text/plain");
           res.status(400).send(`echo 'The sample of [${tmplPath}] is not defined. See: ${helpUrl}'`);
@@ -140,25 +139,14 @@ function Portlet (params = {}) {
         return;
       }
       //
-      const sample = sampleStore.getScenario("default");
-      const sampleRequest = lodash.get(sample, "request", {});
-      //
-      const realPath = replaceParametersInUrl(tmplPath, lodash.get(sampleRequest, "params", {}));
-      const realUrl = buildUrl(urlObject, realPath, sampleRequest.query);
+      const fetchParams = renderer.buildFetchParams();
       //
       if (format === "curl") {
         res.set("Content-Type", "text/plain");
-        res.status(200).send(renderCurlScript(realUrl, Object.assign({
-          method
-        }, lodash.pick(sampleRequest, ["headers", "body"], {}))));
+        res.status(200).send(renderCurlScript(fetchParams.url, fetchParams.options));
       } else {
         res.set("Content-Type", "application/json");
-        res.status(200).send(JSON.stringify({
-          url: realUrl,
-          options: Object.assign({
-            method
-          }, lodash.pick(sampleRequest, ["headers", "body"], {}))
-        }, null, 2));
+        res.status(200).send(JSON.stringify(fetchParams, null, 2));
       }
     });
     //
@@ -181,6 +169,38 @@ function buildUrl (urlObject, pathname, query) {
     urlObject.query = query;
   }
   return url.format(urlObject);
+}
+
+function Renderer ({ urlObject, pathPattern, descriptor }) {
+  const method = lodash.get(descriptor, "method", "GET");
+  const sampleStore = lodash.get(descriptor, "sample", {});
+  //
+  this.isSampleAvailable = function() {
+    return lodash.isFunction(sampleStore.getNames)
+        && lodash.isFunction(sampleStore.getScenario);
+  };
+  //
+  this.getSampleNames = function() {
+    if (lodash.isFunction(sampleStore.getNames)) {
+      return sampleStore.getNames();
+    }
+    return [];
+  };
+  //
+  this.buildFetchParams = function ({ scenarioName } = {}) {
+    scenarioName = scenarioName || "default";
+    const sample = sampleStore.getScenario(scenarioName);
+    const sampleRequest = lodash.get(sample, "request", {});
+    //
+    const sampleParams = lodash.get(sampleRequest, "params", {});
+    const realPath = replaceParametersInUrl(pathPattern, sampleParams);
+    const realUrl = buildUrl(urlObject, realPath, sampleRequest.query);
+    //
+    return {
+      url: realUrl,
+      options: Object.assign({ method }, lodash.pick(sampleRequest, ["headers", "body"], {}))
+    };
+  };
 }
 
 module.exports = Service;
