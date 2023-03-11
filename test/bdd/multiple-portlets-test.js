@@ -12,9 +12,7 @@ const path = require("path");
 const freshy = require("freshy");
 
 function requireFresh (moduleName, basePath) {
-  const modulePath = path.join(basePath, moduleName);
-  freshy.unload(modulePath);
-  return require(modulePath);
+  return freshy.reload(path.join(basePath || __dirname, moduleName));
 }
 
 describe("bdd: @saola/plugin-restfront", function() {

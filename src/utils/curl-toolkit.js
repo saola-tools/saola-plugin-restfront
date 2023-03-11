@@ -34,7 +34,7 @@ function standardizeArguments (urlOrOptions, optionsWithoutUrl) {
 }
 
 function joinScriptLines (url, options) {
-  const parts = [ `curl '${url}'${generateMethod(options)}` ];
+  const parts = [ `curl "${url}"`, `${generateMethod(options)}` ];
   //
   const headers = generateHeader(options);
   if (!lodash.isEmpty(headers.params)) {

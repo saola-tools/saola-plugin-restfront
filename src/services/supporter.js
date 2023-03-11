@@ -38,8 +38,10 @@ function Portlet (params = {}) {
   const T = loggingFactory.getTracer();
   const blockRef = chores.getBlockRef(__filename, packageName);
 
+  const urlObject = lodash.pick(webserverHandler, ["protocol", "hostname", "port"]);
+
   const contextPath = portletConfig.supportPath || "/_/restfront";
-  const helpUrl = buildUrl(contextPath);
+  const helpUrl = buildUrl(urlObject, contextPath);
 
   L && L.has("silly") && L.log("silly", T && T.add({ blockRef, portletName, contextPath }).toMessage({
     tags: [ blockRef ],
@@ -73,6 +75,16 @@ function Portlet (params = {}) {
   }
 
   const mappingDefs = transformMappings(generalPath, mappingHash);
+
+  Object.defineProperties(this, {
+    "getMetaDescriptors": {
+      get: function() {
+        return function() {
+          return mappingDefs;
+        };
+      },
+    },
+  });
 
   this.buildRestRouter = function (express) {
     const router = express.Router();
@@ -111,6 +123,7 @@ function Portlet (params = {}) {
         return;
       }
       //
+      const method = lodash.get(mapping, "method", "GET");
       const sampleStore = lodash.get(mapping, "sample", {});
       if (!lodash.isFunction(sampleStore.getScenario)) {
         if (format === "curl") {
@@ -127,12 +140,11 @@ function Portlet (params = {}) {
         return;
       }
       //
-      const method = lodash.get(mapping, "method", "GET");
       const sample = sampleStore.getScenario("default");
       const sampleRequest = lodash.get(sample, "request", {});
       //
       const realPath = replaceParametersInUrl(tmplPath, lodash.get(sampleRequest, "params", {}));
-      const realUrl = buildUrl(realPath, sampleRequest.query);
+      const realUrl = buildUrl(urlObject, realPath, sampleRequest.query);
       //
       if (format === "curl") {
         res.set("Content-Type", "text/plain");
@@ -160,18 +172,15 @@ function Portlet (params = {}) {
       middleware: this.buildRestRouter(express)
     };
   };
+}
 
-  function buildUrl (urlPath, query) {
-    const urlObject = {};
-    urlObject.protocol = webserverHandler.protocol;
-    urlObject.hostname = webserverHandler.hostname;
-    urlObject.port = webserverHandler.port;
-    urlObject.pathname = urlPath;
-    if (lodash.isObject(query)) {
-      urlObject.query = query;
-    }
-    return url.format(urlObject);
+function buildUrl (urlObject, pathname, query) {
+  urlObject = lodash.clone(urlObject);
+  urlObject.pathname = pathname;
+  if (lodash.isObject(query)) {
+    urlObject.query = query;
   }
+  return url.format(urlObject);
 }
 
 module.exports = Service;
