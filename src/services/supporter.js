@@ -56,10 +56,17 @@ function Portlet (params = {}) {
         return;
       }
       lodash.forEach(list, function(item) {
-        item = lodash.cloneDeep(item);
-        item.path = path.join(generalPath, item.path);
-        const uniqPath = item.path;
-        lodash.set(mappingRefs, uniqPath, Object.assign({ mappingName }, item));
+        item = Object.assign({ mappingName }, lodash.cloneDeep(item));
+        if (lodash.isArray(item.path)) {
+          lodash.forEach(item.path, function(subPath) {
+            subPath = path.join(generalPath, subPath);
+            lodash.set(mappingRefs, subPath, item);
+          });
+        }
+        if (lodash.isString(item.path)) {
+          item.path = path.join(generalPath, item.path);
+          lodash.set(mappingRefs, item.path, item);
+        }
       });
     });
     return mappingRefs;
