@@ -86,7 +86,20 @@ function Portlet (params = {}) {
     },
   });
 
+  this.getPathPatterns = function() {
+    return lodash.keys(mappingDefs);
+  };
+
+  this.getRenderer = function(pathPattern) {
+    const descriptor = lodash.get(mappingDefs, pathPattern);
+    if (!lodash.isObject(descriptor) || lodash.isEmpty(descriptor)) {
+      return null;
+    }
+    return new Renderer({ urlObject, pathPattern, descriptor });
+  };
+
   this.buildRestRouter = function (express) {
+    const self = this;
     const router = express.Router();
     //
     router.all("/", function(req, res) {
@@ -101,21 +114,21 @@ function Portlet (params = {}) {
       //
       let format = ["curl", "json"].includes(req.query.format) ? req.query.format : "json";
       //
-      let tmplPath = req.path;
-      if (lodash.isString(tmplPath)) {
-        tmplPath = tmplPath.replace(contextPath, "");
+      let pathPattern = req.path;
+      if (lodash.isString(pathPattern)) {
+        pathPattern = pathPattern.replace(contextPath, "");
       }
       //
-      const mapping = lodash.get(mappingDefs, tmplPath);
+      const renderer = self.getRenderer(pathPattern);
       //
-      if (!lodash.isObject(mapping) || lodash.isEmpty(mapping)) {
+      if (!renderer) {
         if (format === "curl") {
           res.set("Content-Type", "text/plain");
-          res.status(400).send(`echo 'The descriptor of [${tmplPath}] not found. See: ${helpUrl}'`);
+          res.status(400).send(`echo 'The descriptor of [${pathPattern}] not found. See: ${helpUrl}'`);
         } else {
           res.set("Content-Type", "application/json");
           res.status(400).send(JSON.stringify({
-            url: tmplPath,
+            url: pathPattern,
             message: "The descriptor of the [url] not found",
             helpUrl: helpUrl,
           }));
@@ -123,15 +136,14 @@ function Portlet (params = {}) {
         return;
       }
       //
-      const renderer = new Renderer({ urlObject, pathPattern: tmplPath, descriptor: mapping });
       if (!renderer.isSampleAvailable()) {
         if (format === "curl") {
           res.set("Content-Type", "text/plain");
-          res.status(400).send(`echo 'The sample of [${tmplPath}] is not defined. See: ${helpUrl}'`);
+          res.status(400).send(`echo 'The sample of [${pathPattern}] is not defined. See: ${helpUrl}'`);
         } else {
           res.set("Content-Type", "application/json");
           res.status(400).send(JSON.stringify({
-            url: tmplPath,
+            url: pathPattern,
             message: "The sample of the [url] is not defined",
             helpUrl: helpUrl,
           }));
@@ -174,6 +186,10 @@ function buildUrl (urlObject, pathname, query) {
 function Renderer ({ urlObject, pathPattern, descriptor }) {
   const method = lodash.get(descriptor, "method", "GET");
   const sampleStore = lodash.get(descriptor, "sample", {});
+  //
+  this.getDescriptor = function() {
+    return descriptor;
+  }
   //
   this.isSampleAvailable = function() {
     return lodash.isFunction(sampleStore.getNames)
