@@ -76,16 +76,6 @@ function Portlet (params = {}) {
 
   const mappingDefs = transformMappings(generalPath, mappingHash);
 
-  Object.defineProperties(this, {
-    "getMetaDescriptors": {
-      get: function() {
-        return function() {
-          return mappingDefs;
-        };
-      },
-    },
-  });
-
   this.getPathPatterns = function() {
     return lodash.keys(mappingDefs);
   };
