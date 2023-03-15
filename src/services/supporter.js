@@ -179,11 +179,11 @@ function Renderer ({ urlObject, pathPattern, descriptor }) {
   //
   this.getDescriptor = function() {
     return descriptor;
-  }
+  };
   //
   this.isSampleAvailable = function() {
-    return lodash.isFunction(sampleStore.getNames)
-        && lodash.isFunction(sampleStore.getScenario);
+    return lodash.isFunction(sampleStore.getNames) &&
+        lodash.isFunction(sampleStore.getScenario);
   };
   //
   this.getSampleNames = function() {

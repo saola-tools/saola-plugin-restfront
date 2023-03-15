@@ -64,8 +64,8 @@ function Portlet (params = {}) {
   const apiPath = portletConfig.apiPath || "";
   const generalPath = path.join(contextPath, apiPath);
 
-  const mappingHash = sanitizeMappings(mappingLoader.loadMappings(portletConfig.mappingStore));
-
+  const mappingDict = mappingLoader.loadMappings(portletConfig.mappingStore);
+  const mappingHash = sanitizeMappings(mappingDict);
   const mappings = joinMappings(mappingHash);
 
   const swaggerBuilder = sandboxRegistry.lookupService("app-apispec/swaggerBuilder") ||
@@ -186,17 +186,7 @@ function sanitizeMappings (mappingHash, newMappings = {}) {
     let list = mappingList.apiMaps || mappingList.apimaps || mappingList;
     if (lodash.isArray(list)) {
       if (lodash.isString(apiPath) && !lodash.isEmpty(apiPath)) {
-        list = lodash.map(list, function(item) {
-          if (lodash.isString(item.path)) {
-            item.path = path.join(apiPath, item.path);
-          }
-          if (lodash.isArray(item.path)) {
-            item.path = lodash.map(item.path, function(subpath) {
-              return path.join(apiPath, subpath);
-            });
-          }
-          return item;
-        });
+        list = lodash.map(list, lodash.partial(prefixApiPath, apiPath));
       }
       newMappings[name].apiMaps = upgradeMappings(list);
     }
@@ -212,6 +202,18 @@ function sanitizeMappings (mappingHash, newMappings = {}) {
     newMappings[name].apiDocs = swagger;
   });
   return newMappings;
+}
+
+function prefixApiPath (apiPath, apiMap) {
+  if (lodash.isString(apiMap.path)) {
+    apiMap.path = path.join(apiPath, apiMap.path);
+  }
+  if (lodash.isArray(apiMap.path)) {
+    apiMap.path = lodash.map(apiMap.path, function(subpath) {
+      return path.join(apiPath, subpath);
+    });
+  }
+  return apiMap;
 }
 
 function upgradeMappings (mappings = []) {
