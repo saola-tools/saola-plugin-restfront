@@ -179,17 +179,17 @@ function joinMappings (mappingHash, mappings = []) {
 
 function sanitizeMappings (mappingHash, newMappings = {}) {
   lodash.forOwn(mappingHash, function(mappingList, name) {
-    mappingList = mappingList || {};
     const apiPath = mappingList["apiPath"];
     newMappings[name] = newMappings[name] || {};
+    //
     // prefix the paths of middlewares by apiPath
-    let list = mappingList.apiMaps || mappingList.apimaps || mappingList;
-    if (lodash.isArray(list)) {
-      if (lodash.isString(apiPath) && !lodash.isEmpty(apiPath)) {
-        list = lodash.map(list, lodash.partial(prefixApiPath, apiPath));
-      }
-      newMappings[name].apiMaps = upgradeMappings(list);
+    let apiMaps = lodash.isArray(mappingList) ? mappingList
+        : lodash.get(mappingList, "apiMaps", lodash.get(mappingList, "apimaps"));
+    apiMaps = mapPrefixApiPathToList(apiPath, apiMaps);
+    if (lodash.isArray(apiMaps)) {
+      newMappings[name].apiMaps = upgradeMappings(apiMaps);
     }
+    //
     // prefix the paths of swagger entries by apiPath
     let swagger = mappingList.apiDocs || mappingList.swagger;
     if (swagger && swagger.paths && lodash.isObject(swagger.paths)) {
@@ -202,6 +202,16 @@ function sanitizeMappings (mappingHash, newMappings = {}) {
     newMappings[name].apiDocs = swagger;
   });
   return newMappings;
+}
+
+function mapPrefixApiPathToList (apiPath, apiMaps) {
+  if (!lodash.isString(apiPath) || lodash.isEmpty(apiPath)) {
+    return apiMaps;
+  }
+  if (!lodash.isArray(apiMaps)) {
+    return apiMaps;
+  }
+  return lodash.map(apiMaps, lodash.partial(prefixApiPath, apiPath));
 }
 
 function prefixApiPath (apiPath, apiMap) {
@@ -217,6 +227,9 @@ function prefixApiPath (apiPath, apiMap) {
 }
 
 function upgradeMappings (mappings = []) {
+  if (!lodash.isArray(mappings)) {
+    return mappings;
+  }
   return lodash.map(mappings, upgradeMapping);
 }
 
