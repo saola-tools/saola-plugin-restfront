@@ -8,7 +8,7 @@ const Validator = require("schema-validator");
 const path = require("path");
 
 const { PortletMixiner } = Core.require("portlet");
-const { isPureObject, parseUserAgent } = require("../utils");
+const { isPureObject, parseUserAgent, assertProperty } = require("../utils");
 
 function Handler (params = {}) {
   const { packageName, loggingFactory, configPortletifier, tracelogService } = params;
@@ -66,7 +66,7 @@ function Portlet (params = {}) {
 
   const mappingDict = mappingLoader.loadMappings(portletConfig.mappingStore);
   const mappingHash = sanitizeMappings(mappingDict);
-  const mappings = joinMappings(mappingHash);
+  const mappingRefs = combineMappings(mappingHash);
 
   const swaggerBuilder = sandboxRegistry.lookupService("app-apispec/swaggerBuilder") ||
       sandboxRegistry.lookupService("app-restguide/swaggerBuilder");
@@ -101,7 +101,7 @@ function Portlet (params = {}) {
 
   this.validator = function (express) {
     const router = express.Router();
-    lodash.forEach(mappings, function (mapping) {
+    lodash.forEach(mappingRefs, function (mapping) {
       if (mapping.validatorSchema) {
         router.all(mapping.path, function (req, res, next) {
           if (!isMethodIncluded(mapping.method, req.method)) {
@@ -143,7 +143,7 @@ function Portlet (params = {}) {
 
   this.buildRestRouter = function (express) {
     const router = express.Router();
-    lodash.forEach(mappings, function (mapping) {
+    lodash.forEach(mappingRefs, function (mapping) {
       L && L.has("info") && L.log("info", T && T.add({
         mapPath: mapping.path,
         mapMethod: mapping.method
@@ -164,18 +164,20 @@ function Portlet (params = {}) {
   };
 }
 
-function joinMappings (mappingHash, mappings = []) {
+function combineMappings (mappingHash, mappingRefs = {}) {
   lodash.forOwn(mappingHash, function(mappingBundle, mappingName) {
-    const list = lodash.isArray(mappingBundle.apiMaps) ? mappingBundle.apiMaps
-        : lodash.values(mappingBundle.apiMaps);
-    if (lodash.isArray(list)) {
-      mappings.push.apply(mappings, lodash.map(list, function(item) {
-        item.errorSource = item.errorSource || mappingName;
-        return item;
-      }));
-    }
+    const apiMaps = mappingBundle.apiMaps;
+    lodash.forOwn(apiMaps, function(apiMap, apiPath) {
+      const mapping = assertProperty(mappingRefs, apiPath);
+      lodash.mergeWith(mapping, apiMap, function(target, source) {
+        if (lodash.isArray(target)) {
+          return target.concat(source);
+        }
+      });
+      mapping.errorSource = mapping.errorSource || mappingName;
+    });
   });
-  return mappings;
+  return lodash.values(mappingRefs);
 }
 
 function sanitizeMappings (mappingHash, newMappings = {}) {

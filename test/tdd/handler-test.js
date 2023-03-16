@@ -106,12 +106,12 @@ describe("tdd: handler", function() {
     }
   };
 
-  describe("joinMappings()", function() {
-    let Handler, joinMappings;
+  describe("combineMappings()", function() {
+    let Handler, combineMappings;
 
     beforeEach(function() {
       Handler = mockit.acquire("handler", { libraryDir: "../lib" });
-      joinMappings = mockit.get(Handler, "joinMappings");
+      combineMappings = mockit.get(Handler, "combineMappings");
     });
 
     it("Merge a list of apiMaps into an array of mappings", function() {
@@ -215,7 +215,7 @@ describe("tdd: handler", function() {
         }
       ];
       //
-      const mappings = joinMappings(mappingHash);
+      const mappings = combineMappings(mappingHash);
       false && console.log(JSON.stringify(mappings, null, 2));
       assert.sameDeepOrderedMembers(mappings, expected);
     });

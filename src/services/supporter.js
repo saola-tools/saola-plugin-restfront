@@ -8,6 +8,7 @@ const url = require("url");
 
 const { PortletMixiner } = Core.require("portlet");
 
+const { assertProperty } = require("../utils");
 const { replaceParametersInUrl, renderCurlScript } = require("../utils/curl-toolkit");
 
 function Service (params = {}) {
@@ -53,23 +54,18 @@ function Portlet (params = {}) {
 
   function transformMappings (generalPath, mappingHash, mappingRefs = {}) {
     lodash.forOwn(mappingHash, function(mappingBundle, mappingName) {
-      const list = lodash.isArray(mappingBundle.apiMaps) ? mappingBundle.apiMaps
-        : lodash.values(mappingBundle.apiMaps);
-      if (!lodash.isArray(list)) {
-        return;
-      }
-      lodash.forEach(list, function(item) {
-        item = Object.assign({ mappingName }, lodash.cloneDeep(item));
-        if (lodash.isArray(item.path)) {
-          lodash.forEach(item.path, function(subPath) {
-            subPath = path.join(generalPath, subPath);
-            lodash.set(mappingRefs, subPath, item);
+      lodash.forOwn(mappingBundle.apiMaps, function(item) {
+        const itemPath = lodash.isArray(item.path) ? item.path : [ item.path ];
+        lodash.forEach(itemPath, function(subPath) {
+          subPath = path.join(generalPath, subPath);
+          const mapping = assertProperty(mappingRefs, subPath);
+          lodash.mergeWith(mapping, item, function(target, source) {
+            if (lodash.isArray(target)) {
+              return target.concat(source);
+            }
           });
-        }
-        if (lodash.isString(item.path)) {
-          item.path = path.join(generalPath, item.path);
-          lodash.set(mappingRefs, item.path, item);
-        }
+          mapping.errorSource = mapping.errorSource || mappingName;
+        });
       });
     });
     return mappingRefs;

@@ -45,8 +45,16 @@ function parseUserAgent (userAgentString) {
   return uaParser(userAgentString);
 }
 
+function assertProperty (obj, propName, defaultValue = {}) {
+  if (!lodash.has(obj, propName)) {
+    lodash.set(obj, propName, defaultValue);
+  }
+  return lodash.get(obj, propName);
+}
+
 module.exports = {
   isPureObject,
   filterMethodResult,
   parseUserAgent,
+  assertProperty,
 };
