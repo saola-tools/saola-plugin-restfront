@@ -166,7 +166,8 @@ function Portlet (params = {}) {
 
 function joinMappings (mappingHash, mappings = []) {
   lodash.forOwn(mappingHash, function(mappingBundle, mappingName) {
-    const list = mappingBundle.apiMaps;
+    const list = lodash.isArray(mappingBundle.apiMaps) ? mappingBundle.apiMaps
+        : lodash.values(mappingBundle.apiMaps);
     if (lodash.isArray(list)) {
       mappings.push.apply(mappings, lodash.map(list, function(item) {
         item.errorSource = item.errorSource || mappingName;
@@ -187,8 +188,9 @@ function sanitizeMappings (mappingHash, newMappings = {}) {
         : lodash.get(mappingList, "apiMaps", lodash.get(mappingList, "apimaps"));
     apiMaps = mapPrefixApiPathToList(apiPath, apiMaps);
     if (lodash.isArray(apiMaps)) {
-      newMappings[name].apiMaps = upgradeMappings(apiMaps);
+      apiMaps = convertListToHash(apiMaps);
     }
+    newMappings[name].apiMaps = upgradeMappings(apiMaps);
     //
     // prefix the paths of swagger entries by apiPath
     let swagger = mappingList.apiDocs || mappingList.swagger;
@@ -226,11 +228,20 @@ function prefixApiPath (apiPath, apiMap) {
   return apiMap;
 }
 
+function convertListToHash (apiMaps) {
+  return lodash.keyBy(apiMaps, function(apiMap) {
+    if (lodash.isString(apiMap.path)) {
+      return apiMap.path;
+    }
+    if (lodash.isArray(apiMap.path) && lodash.size(apiMap.path) > 0) {
+      return apiMap.path[0];
+    }
+    return "error";
+  });
+}
+
 function upgradeMappings (mappings = []) {
-  if (!lodash.isArray(mappings)) {
-    return mappings;
-  }
-  return lodash.map(mappings, upgradeMapping);
+  return lodash.mapValues(mappings, upgradeMapping);
 }
 
 function upgradeMapping (mapping = {}) {

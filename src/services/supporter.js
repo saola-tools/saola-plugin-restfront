@@ -53,7 +53,8 @@ function Portlet (params = {}) {
 
   function transformMappings (generalPath, mappingHash, mappingRefs = {}) {
     lodash.forOwn(mappingHash, function(mappingBundle, mappingName) {
-      const list = mappingBundle.apiMaps;
+      const list = lodash.isArray(mappingBundle.apiMaps) ? mappingBundle.apiMaps
+        : lodash.values(mappingBundle.apiMaps);
       if (!lodash.isArray(list)) {
         return;
       }

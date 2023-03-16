@@ -117,8 +117,8 @@ describe("tdd: handler", function() {
     it("Merge a list of apiMaps into an array of mappings", function() {
       const mappingHash = {
         "devebot-application": {
-          "apiMaps": [
-            {
+          "apiMaps": {
+            "/sub/:apiVersion/fibonacci/calc/:number": {
               "path": "/sub/:apiVersion/fibonacci/calc/:number",
               "method": "GET",
               "requestOptions": {
@@ -138,12 +138,12 @@ describe("tdd: handler", function() {
               "error": {
                 "mutate": {}
               }
-            }
-          ]
+            },
+          }
         },
         "app-restproxy/git-connector": {
-          "apiMaps": [
-            {
+          "apiMaps": {
+            "/git/:apiVersion/group/:groupName": {
               "path": "/git/:apiVersion/group/:groupName",
               "method": "GET",
               "requestOptions": {
@@ -163,8 +163,8 @@ describe("tdd: handler", function() {
               "error": {
                 "mutate": {}
               }
-            }
-          ]
+            },
+          }
         }
       };
       //
@@ -262,8 +262,8 @@ describe("tdd: handler", function() {
       assert.deepEqual(mappingRefs, {
         "example1": {
           "apiDocs": undefined,
-          "apiMaps": [
-            {
+          "apiMaps": {
+            "/:apiVersion/action1": {
               "path": "/:apiVersion/action1",
               "input": {
                 "mutate": {}
@@ -276,7 +276,7 @@ describe("tdd: handler", function() {
                 "mutate": {}
               }
             },
-            {
+            "/:apiVersion/action2": {
               "path": [
                 "/:apiVersion/action2",
                 "/:apiVersion/action2/alias"
@@ -291,13 +291,13 @@ describe("tdd: handler", function() {
               "error": {
                 "mutate": {}
               }
-            }
-          ]
+            },
+          }
         },
         "example2": {
           "apiDocs": undefined,
-          "apiMaps": [
-            {
+          "apiMaps": {
+            "/example2/:apiVersion/action1": {
               "path": "/example2/:apiVersion/action1",
               "input": {
                 "mutate": {}
@@ -310,7 +310,7 @@ describe("tdd: handler", function() {
                 "mutate": {}
               }
             },
-            {
+            "/example2/:apiVersion/action2": {
               "path": [
                 "/example2/:apiVersion/action2",
                 "/example2/:apiVersion/action2/alias"
@@ -325,8 +325,8 @@ describe("tdd: handler", function() {
               "error": {
                 "mutate": {}
               }
-            }
-          ]
+            },
+          }
         }
       });
     });
@@ -370,7 +370,8 @@ describe("tdd: handler", function() {
                 }
               }
             }
-          }
+          },
+          "apiMaps": {},
         }
       });
     });
