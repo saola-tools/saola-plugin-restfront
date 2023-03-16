@@ -168,8 +168,8 @@ describe("tdd: handler", function() {
         }
       };
       //
-      const expected = [
-        {
+      const expected = {
+        "/sub/:apiVersion/fibonacci/calc/:number": {
           "path": "/sub/:apiVersion/fibonacci/calc/:number",
           "method": "GET",
           "requestOptions": {
@@ -191,7 +191,7 @@ describe("tdd: handler", function() {
           },
           "errorSource": "devebot-application"
         },
-        {
+        "/git/:apiVersion/group/:groupName": {
           "path": "/git/:apiVersion/group/:groupName",
           "method": "GET",
           "requestOptions": {
@@ -212,12 +212,12 @@ describe("tdd: handler", function() {
             "mutate": {}
           },
           "errorSource": "app-restproxy/git-connector"
-        }
-      ];
+        },
+      };
       //
       const mappings = combineMappings(mappingHash);
       false && console.log(JSON.stringify(mappings, null, 2));
-      assert.sameDeepOrderedMembers(mappings, expected);
+      assert.deepEqual(mappings, expected);
     });
   });
 

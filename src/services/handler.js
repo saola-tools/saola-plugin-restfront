@@ -101,7 +101,7 @@ function Portlet (params = {}) {
 
   this.validator = function (express) {
     const router = express.Router();
-    lodash.forEach(mappingRefs, function (mapping) {
+    lodash.forOwn(mappingRefs, function (mapping, _) {
       if (mapping.validatorSchema) {
         router.all(mapping.path, function (req, res, next) {
           if (!isMethodIncluded(mapping.method, req.method)) {
@@ -143,7 +143,7 @@ function Portlet (params = {}) {
 
   this.buildRestRouter = function (express) {
     const router = express.Router();
-    lodash.forEach(mappingRefs, function (mapping) {
+    lodash.forOwn(mappingRefs, function (mapping, _) {
       L && L.has("info") && L.log("info", T && T.add({
         mapPath: mapping.path,
         mapMethod: mapping.method
@@ -169,15 +169,18 @@ function combineMappings (mappingHash, mappingRefs = {}) {
     const apiMaps = mappingBundle.apiMaps;
     lodash.forOwn(apiMaps, function(apiMap, apiPath) {
       const mapping = assertProperty(mappingRefs, apiPath);
-      lodash.mergeWith(mapping, apiMap, function(target, source) {
+      lodash.mergeWith(mapping, apiMap, function(target, source, key) {
         if (lodash.isArray(target)) {
-          return target.concat(source);
+          return lodash.uniq(target.concat(source));
+        }
+        if (lodash.isArray(source) && key === "path") {
+          return source;
         }
       });
       mapping.errorSource = mapping.errorSource || mappingName;
     });
   });
-  return lodash.values(mappingRefs);
+  return mappingRefs;
 }
 
 function sanitizeMappings (mappingHash, newMappings = {}) {

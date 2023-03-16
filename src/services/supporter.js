@@ -59,9 +59,12 @@ function Portlet (params = {}) {
         lodash.forEach(itemPath, function(subPath) {
           subPath = path.join(generalPath, subPath);
           const mapping = assertProperty(mappingRefs, subPath);
-          lodash.mergeWith(mapping, item, function(target, source) {
+          lodash.mergeWith(mapping, item, function(target, source, key) {
             if (lodash.isArray(target)) {
-              return target.concat(source);
+              return lodash.uniq(target.concat(source));
+            }
+            if (lodash.isArray(source) && key === "path") {
+              return source;
             }
           });
           mapping.errorSource = mapping.errorSource || mappingName;
