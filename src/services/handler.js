@@ -185,8 +185,9 @@ function combineMappings (mappingHash, mappingRefs = {}) {
 
 function sanitizeMappings (mappingHash, newMappings = {}) {
   lodash.forOwn(mappingHash, function(mappingList, name) {
+    const newMapping = assertProperty(newMappings, name, {});
+    //
     const apiPath = mappingList["apiPath"];
-    newMappings[name] = newMappings[name] || {};
     //
     // prefix the paths of middlewares by apiPath
     let apiMaps = lodash.isArray(mappingList) ? mappingList
@@ -195,7 +196,7 @@ function sanitizeMappings (mappingHash, newMappings = {}) {
     if (lodash.isArray(apiMaps)) {
       apiMaps = convertListToHash(apiMaps);
     }
-    newMappings[name].apiMaps = upgradeMappings(apiMaps);
+    newMapping.apiMaps = upgradeMappings(apiMaps);
     //
     // prefix the paths of swagger entries by apiPath
     let swagger = mappingList.apiDocs || mappingList.swagger;
@@ -206,7 +207,7 @@ function sanitizeMappings (mappingHash, newMappings = {}) {
         });
       }
     }
-    newMappings[name].apiDocs = swagger;
+    newMapping.apiDocs = swagger;
   });
   return newMappings;
 }
@@ -552,7 +553,7 @@ function addDefaultResponseHeaders (packet, responseOptions) {
   packet.headers = packet.headers || {};
   const headerName = responseOptions && responseOptions.returnCode && responseOptions.returnCode.headerName;
   if ((typeof headerName === "string") && !(headerName in packet.headers)) {
-    packet.headers[headerName] = 0;
+    lodash.set(packet.headers, headerName, 0);
   }
   return packet;
 }
@@ -626,7 +627,7 @@ function transformScalarError (error, responseOptions = {}, packet = {}) {
   packet.headers = packet.headers || {};
   const returnCodeName = lodash.get(responseOptions, "returnCode.headerName", "X-Return-Code");
   if (!(returnCodeName in packet.headers)) {
-    packet.headers[returnCodeName] = -1;
+    lodash.set(packet.headers, returnCodeName, -1);
   }
   return packet;
 }
@@ -635,7 +636,7 @@ function extractRequestOptions (req, requestOptions, opts = {}, errors) {
   const result = {};
 
   for (const optionKey in requestOptions) {
-    let requestOption = requestOptions[optionKey];
+    let requestOption = lodash.get(requestOptions, optionKey);
     if (lodash.isString(requestOption)) {
       requestOption = { headerName: requestOption };
     }
@@ -649,7 +650,7 @@ function extractRequestOptions (req, requestOptions, opts = {}, errors) {
         errors.push(optionKey);
       }
     }
-    result[optionName] = optionValue;
+    lodash.set(result, optionName, optionValue);
   }
 
   if (opts.userAgentEnabled) {
