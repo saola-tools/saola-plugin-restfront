@@ -706,12 +706,12 @@ describe("tdd: handler", function() {
   });
 
   for (const label of ["Standard", "Optimized"]) {
-    describe("renderPacketToResponse_" + label + "()", function() {
+    describe("renderPacketToResponse" + label + "()", function() {
       let Handler, renderPacketToResponse;
 
       beforeEach(function() {
         Handler = mockit.acquire("handler", { libraryDir: "../lib" });
-        renderPacketToResponse = mockit.get(Handler, "renderPacketToResponse_" + label);
+        renderPacketToResponse = mockit.get(Handler, "renderPacketToResponse" + label);
       });
 
       it("render empty packet", function() {

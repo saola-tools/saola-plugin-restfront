@@ -66,7 +66,7 @@ function Portlet (params = {}) {
 
   const mappingDict = mappingLoader.loadMappings(portletConfig.mappingStore);
   const mappingHash = sanitizeMappings(mappingDict);
-  const mappingRefs = combineMappings(mappingHash);
+  const mappingDefs = combineMappings(mappingHash);
 
   const swaggerBuilder = sandboxRegistry.lookupService("app-apispec/swaggerBuilder") ||
       sandboxRegistry.lookupService("app-restguide/swaggerBuilder");
@@ -101,7 +101,7 @@ function Portlet (params = {}) {
 
   this.validator = function (express) {
     const router = express.Router();
-    lodash.forOwn(mappingRefs, function (mapping, _) {
+    lodash.forOwn(mappingDefs, function (mapping, _) {
       if (mapping.validatorSchema) {
         router.all(mapping.path, function (req, res, next) {
           if (!isMethodIncluded(mapping.method, req.method)) {
@@ -143,7 +143,7 @@ function Portlet (params = {}) {
 
   this.buildRestRouter = function (express) {
     const router = express.Router();
-    lodash.forOwn(mappingRefs, function (mapping, _) {
+    lodash.forOwn(mappingDefs, function (mapping, _) {
       L && L.has("info") && L.log("info", T && T.add({
         mapPath: mapping.path,
         mapMethod: mapping.method
@@ -164,11 +164,11 @@ function Portlet (params = {}) {
   };
 }
 
-function combineMappings (mappingHash, mappingRefs = {}) {
+function combineMappings (mappingHash, mappingDefs = {}) {
   lodash.forOwn(mappingHash, function(mappingBundle, mappingName) {
     const apiMaps = mappingBundle.apiMaps;
     lodash.forOwn(apiMaps, function(apiMap, apiPath) {
-      const mapping = assertProperty(mappingRefs, apiPath);
+      const mapping = assertProperty(mappingDefs, apiPath);
       lodash.mergeWith(mapping, apiMap, function(target, source, key) {
         if (lodash.isArray(target)) {
           return lodash.uniq(target.concat(source));
@@ -180,7 +180,7 @@ function combineMappings (mappingHash, mappingRefs = {}) {
       mapping.errorSource = mapping.errorSource || mappingName;
     });
   });
-  return mappingRefs;
+  return mappingDefs;
 }
 
 function sanitizeMappings (mappingHash, newMappings = {}) {
@@ -246,7 +246,7 @@ function convertListToHash (apiMaps) {
   });
 }
 
-function upgradeMappings (mappings = []) {
+function upgradeMappings (mappings = {}) {
   return lodash.mapValues(mappings, upgradeMapping);
 }
 
@@ -668,7 +668,7 @@ function extractRequestOptions (req, requestOptions, opts = {}, errors) {
 
 //-------------------------------------------------------------------------------------------------
 
-function renderPacketToResponse_Standard (packet = {}, res) {
+function renderPacketToResponseStandard (packet = {}, res) {
   if (lodash.isObject(packet.headers)) {
     lodash.forOwn(packet.headers, function (value, key) {
       res.set(key, value);
@@ -686,7 +686,7 @@ function renderPacketToResponse_Standard (packet = {}, res) {
   }
 }
 
-function renderPacketToResponse_Optimized (packet = {}, res) {
+function renderPacketToResponseOptimized (packet = {}, res) {
   // affected with a Pure JSON object
   if (isPureObject(packet.headers)) {
     for (const key in packet.headers) {
@@ -705,10 +705,10 @@ function renderPacketToResponse_Optimized (packet = {}, res) {
   }
 }
 
-let renderPacketToResponse = renderPacketToResponse_Standard;
+let renderPacketToResponse = renderPacketToResponseStandard;
 
 if (chores.isUpgradeSupported("optimization-mode")) {
-  renderPacketToResponse = renderPacketToResponse_Optimized;
+  renderPacketToResponse = renderPacketToResponseOptimized;
 }
 
 //-------------------------------------------------------------------------------------------------

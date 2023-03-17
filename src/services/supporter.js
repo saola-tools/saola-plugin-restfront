@@ -52,13 +52,13 @@ function Portlet (params = {}) {
   const generalPath = restfrontHandler.getGeneralPath();
   const mappingHash = restfrontHandler.getMappingHash();
 
-  function transformMappings (generalPath, mappingHash, mappingRefs = {}) {
+  function transformMappings (generalPath, mappingHash, mappingDefs = {}) {
     lodash.forOwn(mappingHash, function(mappingBundle, mappingName) {
       lodash.forOwn(mappingBundle.apiMaps, function(item) {
         const itemPath = lodash.isArray(item.path) ? item.path : [ item.path ];
         lodash.forEach(itemPath, function(subPath) {
           subPath = path.join(generalPath, subPath);
-          const mapping = assertProperty(mappingRefs, subPath);
+          const mapping = assertProperty(mappingDefs, subPath);
           lodash.mergeWith(mapping, item, function(target, source, key) {
             if (lodash.isArray(target)) {
               return lodash.uniq(target.concat(source));
@@ -71,7 +71,7 @@ function Portlet (params = {}) {
         });
       });
     });
-    return mappingRefs;
+    return mappingDefs;
   }
 
   const mappingDefs = transformMappings(generalPath, mappingHash);
