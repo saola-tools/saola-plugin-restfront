@@ -798,6 +798,7 @@ describe("tdd: handler", function() {
         };
       }
     };
+    const serviceSelectors = { __DEFAULT__: serviceSelector };
     const tracelogService = {
       getRequestId: function(req) {
         return "ADD7D6E0-0736-4B79-98C6-2F0EAE0D671C";
@@ -807,7 +808,7 @@ describe("tdd: handler", function() {
       blockRef: "@saola/plugin-restfront/handler",
       L: loggingFactory.getLogger(),
       T: loggingFactory.getTracer(),
-      portletConfig, errorManager, errorBuilder, serviceSelector, tracelogService,
+      portletConfig, errorManager, errorBuilder, serviceSelectors, tracelogService,
       verbose: true
     };
 
@@ -856,7 +857,8 @@ describe("tdd: handler", function() {
           };
         }
       };
-      const context = lodash.merge({}, ctx, { serviceSelector });
+      const serviceSelectors = { __DEFAULT__: serviceSelector };
+      const context = lodash.merge({}, ctx, { serviceSelectors });
       const mapping = { method: "GET" };
       const middleware = buildMiddlewareFromMapping(context, mapping);
       assert.isFunction(middleware);
@@ -1099,7 +1101,8 @@ describe("tdd: handler", function() {
           };
         }
       };
-      const context = lodash.merge({}, ctx, { serviceSelector });
+      const serviceSelectors = { __DEFAULT__: serviceSelector };
+      const context = lodash.merge({}, ctx, { serviceSelectors });
       const mapping = {
         method: "GET",
         input: {
