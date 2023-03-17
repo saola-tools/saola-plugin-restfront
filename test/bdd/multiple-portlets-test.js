@@ -18,7 +18,7 @@ function requireFresh (moduleName, basePath) {
 describe("bdd: @saola/plugin-restfront", function() {
   before(function() {
     chores.setEnvironments({
-      SAOLA_SANDBOX: "new-mappings,portlets",
+      SAOLA_SANDBOX: "mappings,portlets",
       SAOLA_UPGRADE_ENABLED: "manifest-bypassed",
       SAOLA_FORCING_SILENT: "framework,webserver",
       LOGOLITE_FULL_LOG_MODE: "false",
