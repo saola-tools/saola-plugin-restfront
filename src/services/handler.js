@@ -82,13 +82,32 @@ function Portlet (params = {}) {
   const serviceResolver = portletConfig.serviceResolver || "app-opmaster/commander";
   const serviceSelector = chores.newServiceSelector({ serviceResolver, sandboxRegistry });
 
+  function buildServiceSelectors (mappingDefs) {
+    const serviceSelectors = { __DEFAULT__: serviceSelector };
+    //
+    lodash.forOwn(mappingDefs, function (mapping, _) {
+      const serviceResolver = lodash.get(mapping, "serviceResolver");
+      if (!lodash.isString(serviceResolver)) {
+        return;
+      }
+      if (!lodash.has(serviceSelectors, serviceResolver)) {
+        const serviceSelector = chores.newServiceSelector({ serviceResolver, sandboxRegistry });
+        lodash.set(serviceSelectors, serviceResolver, serviceSelector);
+      }
+    });
+    //
+    return serviceSelectors;
+  }
+
+  const serviceSelectors = buildServiceSelectors(mappingDefs);
+
   const errorBuilder = errorManager.register(packageName, {
     errorCodes: portletConfig.errorCodes
   });
 
   const CTX = {
     L, T, portletName, portletConfig,
-    errorManager, errorBuilder, serviceSelector, schemaValidator, tracelogService
+    errorManager, errorBuilder, serviceSelectors, schemaValidator, tracelogService
   };
 
   this.getGeneralPath = function() {
@@ -313,14 +332,19 @@ function isMethodIncluded (methods, reqMethod) {
   return false;
 }
 
+function getServiceSelector (serviceSelectors, serviceResolver) {
+  return lodash.get(serviceSelectors, serviceResolver, serviceSelectors.__DEFAULT__);
+};
+
 function buildMiddlewareFromMapping (context, mapping) {
   context = context || {};
 
   const { portletConfig } = context;
-  const { L, T, errorManager, errorBuilder, serviceSelector, schemaValidator, tracelogService, verbose } = context;
+  const { L, T, errorManager, errorBuilder, serviceSelectors, schemaValidator, tracelogService, verbose } = context;
 
   const timeout = mapping.timeout || portletConfig.defaultTimeout;
 
+  const serviceSelector = getServiceSelector(serviceSelectors, mapping.serviceResolver);
   const ref = serviceSelector.lookupMethod(mapping.serviceName, mapping.methodName);
   const refMethod = ref && ref.method;
 

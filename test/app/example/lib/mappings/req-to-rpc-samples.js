@@ -27,7 +27,7 @@ const mappings = {
               statusCode: 200
             }
           }
-        }
+        };
         //
         this.getNames = function() {
           return lodash.keys(scenarios);

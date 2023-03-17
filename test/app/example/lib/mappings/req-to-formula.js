@@ -40,6 +40,6 @@ const mappings = {
       }
     }
   ]
-}
+};
 
 module.exports = mappings;
