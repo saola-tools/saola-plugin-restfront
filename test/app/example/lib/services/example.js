@@ -13,7 +13,7 @@ const Service = function(params = {}) {
   const blockRef = chores.getBlockRef(__filename, packageName);
 
   errorManager.register(packageName, {
-    errorCodes: params.sandboxConfig.errorCodes
+    errorCodes: sandboxConfig.errorCodes
   });
 
   errorManager.register("otherErrorSource", {

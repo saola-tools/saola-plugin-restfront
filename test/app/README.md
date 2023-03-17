@@ -23,7 +23,7 @@ npm run clean && npm run build && node test/app/example
 ```
 
 ```shell
-export SAOLA_SANDBOX=new-mappings
+export SAOLA_SANDBOX=new-mappings,samples
 npm run clean && npm run build && node test/app/example
 ```
 
