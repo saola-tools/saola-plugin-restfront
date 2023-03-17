@@ -1,13 +1,13 @@
 "use strict";
 
-const Core = require("@saola/core");
-const Promise = Core.require("bluebird");
-const chores = Core.require("chores");
-const lodash = Core.require("lodash");
+const FRWK = require("@saola/core");
+const Promise = FRWK.require("bluebird");
+const chores = FRWK.require("chores");
+const lodash = FRWK.require("lodash");
 const Validator = require("schema-validator");
 const path = require("path");
 
-const { PortletMixiner } = Core.require("portlet");
+const { PortletMixiner } = FRWK.require("portlet");
 const { isPureObject, parseUserAgent, assertProperty } = require("../utils");
 
 function Handler (params = {}) {

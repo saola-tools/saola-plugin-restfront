@@ -1,9 +1,9 @@
 "use strict";
 
-const Core = require("@saola/core");
-const Promise = Core.require("bluebird");
-const lodash = Core.require("lodash");
-const chores = Core.require("chores");
+const FRWK = require("@saola/core");
+const Promise = FRWK.require("bluebird");
+const lodash = FRWK.require("lodash");
+const chores = FRWK.require("chores");
 const { assert, mockit, sinon } = require("liberica");
 
 const Fibonacci = require("../lib/fibonacci");
@@ -31,7 +31,7 @@ describe("tdd: handler", function() {
     "contextPath": "/example",
     "apiPath": "rest",
     "mappingStore": {
-      "devebot-application": "saola-plugin-restfront/test/app/example/lib/mappings/req-to-rpc"
+      "example-application": "saola-plugin-restfront/test/app/example/lib/mappings/req-to-rpc"
     },
     "static": {
       "apidoc": "saola-plugin-restfront/test/app/example/public/apidoc",
@@ -116,7 +116,7 @@ describe("tdd: handler", function() {
 
     it("Merge a list of apiMaps into an array of mappings", function() {
       const mappingHash = {
-        "devebot-application": {
+        "example-application": {
           "apiMaps": {
             "/sub/:apiVersion/fibonacci/calc/:number": {
               "path": "/sub/:apiVersion/fibonacci/calc/:number",
@@ -189,7 +189,7 @@ describe("tdd: handler", function() {
           "error": {
             "mutate": {}
           },
-          "errorSource": "devebot-application"
+          "errorSource": "example-application"
         },
         "/git/:apiVersion/group/:groupName": {
           "path": "/git/:apiVersion/group/:groupName",

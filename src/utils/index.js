@@ -1,8 +1,8 @@
 "use strict";
 
 const uaParser = require("ua-parser-js");
-const Core = require("@saola/core");
-const lodash = Core.require("lodash");
+const FRWK = require("@saola/core");
+const lodash = FRWK.require("lodash");
 
 function isPureObject (o) {
   return o && (typeof o === "object") && !Array.isArray(o);

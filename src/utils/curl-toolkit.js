@@ -1,7 +1,7 @@
 "use strict";
 
-const Core = require("@saola/core");
-const lodash = Core.require("lodash");
+const FRWK = require("@saola/core");
+const lodash = FRWK.require("lodash");
 
 const { compile } = require("path-to-regexp");
 

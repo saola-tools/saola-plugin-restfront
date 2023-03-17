@@ -1,8 +1,8 @@
 "use strict";
 
-const Core = require("@saola/core");
-const Promise = Core.require("bluebird");
-const chores = Core.require("chores");
+const FRWK = require("@saola/core");
+const Promise = FRWK.require("bluebird");
+const chores = FRWK.require("chores");
 const Fibonacci = require("../utils/fibonacci");
 
 const Service = function(params = {}) {

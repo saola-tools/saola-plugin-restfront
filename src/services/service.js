@@ -1,11 +1,11 @@
 "use strict";
 
-const Core = require("@saola/core");
-const lodash = Core.require("lodash");
-const chores = Core.require("chores");
+const FRWK = require("@saola/core");
+const lodash = FRWK.require("lodash");
+const chores = FRWK.require("chores");
 const path = require("path");
 
-const { PortletMixiner } = Core.require("portlet");
+const { PortletMixiner } = FRWK.require("portlet");
 
 function Service (params = {}) {
   const { packageName, loggingFactory, configPortletifier } = params;

@@ -1,7 +1,7 @@
 "use strict";
 
-const Core = require("@saola/core");
-const chores = Core.require("chores");
+const FRWK = require("@saola/core");
+const chores = FRWK.require("chores");
 
 const app = require("../app/simplest");
 

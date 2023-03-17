@@ -1,12 +1,12 @@
 "use strict";
 
-const Core = require("@saola/core");
-const lodash = Core.require("lodash");
-const chores = Core.require("chores");
+const FRWK = require("@saola/core");
+const lodash = FRWK.require("lodash");
+const chores = FRWK.require("chores");
 const path = require("path");
 const url = require("url");
 
-const { PortletMixiner } = Core.require("portlet");
+const { PortletMixiner } = FRWK.require("portlet");
 
 const { assertProperty } = require("../utils");
 const { replaceParametersInUrl, renderCurlScript } = require("../utils/curl-toolkit");

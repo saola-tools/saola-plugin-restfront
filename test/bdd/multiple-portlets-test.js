@@ -3,10 +3,10 @@
 const axios = require("axios");
 const { assert } = require("liberica");
 
-const Core = require("@saola/core");
-const Promise = Core.require("bluebird");
-const chores = Core.require("chores");
-const lodash = Core.require("lodash");
+const FRWK = require("@saola/core");
+const Promise = FRWK.require("bluebird");
+const chores = FRWK.require("chores");
+const lodash = FRWK.require("lodash");
 
 const path = require("path");
 const freshy = require("freshy");
