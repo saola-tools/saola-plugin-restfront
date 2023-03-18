@@ -1,6 +1,6 @@
 {
   "name": "@saola/plugin-restfront",
-  "version": "0.4.2",
+  "version": "0.4.3",
   "description": "Saola RestFront plugin",
   "author": "Saola Development Team",
   "main": "index.js",
@@ -51,6 +51,7 @@
     "@babel/cli": "^7.19.3",
     "@babel/core": "^7.20.2",
     "@babel/preset-env": "^7.20.2",
+    "@saola/plugin-restfetch": "^0.4.2",
     "babel-plugin-minify-mangle-names": "^0.5.1",
     "cross-env": "^5.2.0",
     "eslint": "^5.16.0",

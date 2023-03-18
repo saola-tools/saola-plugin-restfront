@@ -13,7 +13,7 @@ module.exports = {
           contextPath: contextPath,
           apiPath: apiPath,
           mappingStore: {
-            "formula-mappings": path.join(__dirname, "../lib/mappings/req-to-formula")
+            "formula-mappings": path.join(__dirname, "../lib/mappings/restfront/req-to-formula")
           },
         }
       }

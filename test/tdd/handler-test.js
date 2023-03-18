@@ -31,7 +31,7 @@ describe("tdd: handler", function() {
     "contextPath": "/example",
     "apiPath": "rest",
     "mappingStore": {
-      "example-application": "saola-plugin-restfront/test/app/example/lib/mappings/req-to-rpc"
+      "example-application": "saola-plugin-restfront/test/app/example/lib/mappings/restfront/req-to-rpc"
     },
     "static": {
       "apidoc": "saola-plugin-restfront/test/app/example/public/apidoc",
