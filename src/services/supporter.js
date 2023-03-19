@@ -202,9 +202,17 @@ function Renderer ({ urlObject, pathPattern, descriptor }) {
     const realPath = replaceParametersInUrl(pathPattern, sampleParams);
     const realUrl = buildUrl(urlObject, realPath, sampleRequest.query);
     //
+    const sampleResponse = lodash.get(sample, ["response", "contains"], {});
+    //
+    const statusCode = lodash.get(sampleResponse, ["statusCode"], -1);
+    const statusText = lodash.get(sampleResponse, ["statusText"], "OK");
+    const headers = lodash.get(sampleResponse, ["headers"], {});
+    const body = lodash.get(sampleResponse, ["body"], null);
+    //
     return {
       url: realUrl,
-      options: Object.assign({ method }, lodash.pick(sampleRequest, ["headers", "body"], {}))
+      options: Object.assign({ method }, lodash.pick(sampleRequest, ["headers", "body"], {})),
+      mockout: { statusCode, statusText, headers, body },
     };
   };
 }

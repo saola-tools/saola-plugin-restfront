@@ -24,7 +24,21 @@ const mappings = {
               },
             },
             response: {
-              statusCode: 200
+              contentType: "json",
+              contains: {
+                statusCode: 200,
+                statusText: "OK",
+                headers: {
+                  "Content-Type": "application/json",
+                },
+                body: {
+                  "value": 2971215073,
+                  "step": 47,
+                  "number": "47"
+                }
+              },
+              matches: function(output, response, request) {
+              }
             }
           }
         };
