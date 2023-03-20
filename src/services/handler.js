@@ -82,24 +82,6 @@ function Portlet (params = {}) {
   const serviceResolver = portletConfig.serviceResolver || "app-opmaster/commander";
   const serviceSelector = chores.newServiceSelector({ serviceResolver, sandboxRegistry });
 
-  function buildServiceSelectors (mappingDefs, context) {
-    const { sandboxRegistry, serviceSelector } = context || {};
-    const serviceSelectors = { __DEFAULT__: serviceSelector };
-    //
-    lodash.forOwn(mappingDefs, function (mapping, _) {
-      const serviceResolver = lodash.get(mapping, "serviceResolver");
-      if (!lodash.isString(serviceResolver)) {
-        return;
-      }
-      if (!lodash.has(serviceSelectors, serviceResolver)) {
-        const serviceSelector = chores.newServiceSelector({ serviceResolver, sandboxRegistry });
-        lodash.set(serviceSelectors, serviceResolver, serviceSelector);
-      }
-    });
-    //
-    return serviceSelectors;
-  }
-
   const serviceSelectors = buildServiceSelectors(mappingDefs, { sandboxRegistry, serviceSelector });
 
   const errorBuilder = errorManager.register(packageName, {
@@ -331,6 +313,24 @@ function isMethodIncluded (methods, reqMethod) {
     }
   }
   return false;
+}
+
+function buildServiceSelectors (mappingDefs, context) {
+  const { sandboxRegistry, serviceSelector } = context || {};
+  const serviceSelectors = { __DEFAULT__: serviceSelector };
+  //
+  lodash.forOwn(mappingDefs, function (mapping, _) {
+    const serviceResolver = lodash.get(mapping, "serviceResolver");
+    if (!lodash.isString(serviceResolver)) {
+      return;
+    }
+    if (!lodash.has(serviceSelectors, serviceResolver)) {
+      const serviceSelector = chores.newServiceSelector({ serviceResolver, sandboxRegistry });
+      lodash.set(serviceSelectors, serviceResolver, serviceSelector);
+    }
+  });
+  //
+  return serviceSelectors;
 }
 
 function getServiceSelector (serviceSelectors, serviceResolver) {
