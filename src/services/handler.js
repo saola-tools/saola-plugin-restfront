@@ -82,7 +82,8 @@ function Portlet (params = {}) {
   const serviceResolver = portletConfig.serviceResolver || "app-opmaster/commander";
   const serviceSelector = chores.newServiceSelector({ serviceResolver, sandboxRegistry });
 
-  function buildServiceSelectors (mappingDefs) {
+  function buildServiceSelectors (mappingDefs, context) {
+    const { sandboxRegistry, serviceSelector } = context || {};
     const serviceSelectors = { __DEFAULT__: serviceSelector };
     //
     lodash.forOwn(mappingDefs, function (mapping, _) {
@@ -99,7 +100,7 @@ function Portlet (params = {}) {
     return serviceSelectors;
   }
 
-  const serviceSelectors = buildServiceSelectors(mappingDefs);
+  const serviceSelectors = buildServiceSelectors(mappingDefs, { sandboxRegistry, serviceSelector });
 
   const errorBuilder = errorManager.register(packageName, {
     errorCodes: portletConfig.errorCodes
@@ -334,7 +335,7 @@ function isMethodIncluded (methods, reqMethod) {
 
 function getServiceSelector (serviceSelectors, serviceResolver) {
   return lodash.get(serviceSelectors, serviceResolver, serviceSelectors.__DEFAULT__);
-};
+}
 
 function buildMiddlewareFromMapping (context, mapping) {
   context = context || {};
