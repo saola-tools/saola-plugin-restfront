@@ -215,6 +215,19 @@ function Renderer ({ urlObject, pathPattern, descriptor }) {
       mockout: { statusCode, statusText, headers, body },
     };
   };
+  //
+  this.getResponseChecker = function ({ scenarioName } = {}) {
+    scenarioName = scenarioName || "default";
+    const sample = sampleStore.getScenario(scenarioName);
+    const checker = lodash.get(sample, ["response", "checker"]);
+    if (!checker) {
+      return undefined;
+    }
+    if (lodash.isFunction(checker)) {
+      return checker;
+    }
+    return null;
+  };
 }
 
 module.exports = Service;

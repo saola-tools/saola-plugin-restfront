@@ -36,7 +36,7 @@ module.exports = {
       contextPath: contextPath,
       apiPath: apiPath,
       mappingStore: {
-        "saola-application": path.join(__dirname, "../lib/mappings/restfront/req-to-rpc")
+        "example-mappings": path.join(__dirname, "../lib/mappings/restfront/req-to-rpc")
       },
       static: {
         "apidoc": path.join(__dirname, "../public/apidoc"),

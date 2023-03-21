@@ -3,6 +3,8 @@
 const FRWK = require("@saola/core");
 const lodash = FRWK.require("lodash");
 
+const { assert } = require("liberica");
+
 const mappings = {
   apiPath: "/sub",
   apiMaps: [
@@ -37,7 +39,12 @@ const mappings = {
                   "number": "47"
                 }
               },
-              matches: function(output, response, request) {
+              checker: function(output, response, request) {
+                assert.deepEqual(output.body, {
+                  "value": 2971215073,
+                  "step": 47,
+                  "number": "47"
+                });
               }
             }
           }
