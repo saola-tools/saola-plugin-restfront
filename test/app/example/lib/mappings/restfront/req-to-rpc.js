@@ -14,7 +14,7 @@ const mappings = {
           required: true
         }
       },
-      errorSource: "otherErrorSource",
+      errorSource: "saola-application",
       input: {
         preValidator: function (req, reqOpts, services) {
           const demoAction = req.get("X-Demo-Action");

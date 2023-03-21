@@ -74,6 +74,39 @@ const mappings = {
               },
             }
           },
+          MaximumExceeding: {
+            request: {
+              method: "GET",
+              params: { apiVersion: "v1", number: 51 },
+              headers: {
+                "Content-Type": "application/json",
+                "X-Request-Id": "54983DAF-1CF7-4599-975A-9F91049F9708",
+                "X-Environment": "dev",
+              },
+            },
+            response: {
+              contains: {
+                statusCode: 400,
+                statusText: "Bad Request",
+                headers: {
+                  "content-type": "application/json",
+                  "x-request-id": "54983DAF-1CF7-4599-975A-9F91049F9708",
+                  "x-return-code": "1002",
+                },
+                body: {
+                  name: 'MaximumExceeding',
+                  message: 'Maximum input number exceeded',
+                  payload: {
+                    errors: [
+                      "Maximum input number exceeded"
+                    ]
+                  }
+                }
+              },
+              checker: function(output, mockout) {
+              },
+            }
+          },
         };
         //
         this.getNames = function() {
