@@ -41,7 +41,7 @@ describe("bdd: @saola/plugin-restfront", function() {
           data: {
             "value": 2971215073,
             "step": 47,
-            "number": "47"
+            "number": 47
           }
         },
         {

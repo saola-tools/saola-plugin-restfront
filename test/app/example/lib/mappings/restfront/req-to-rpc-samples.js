@@ -36,18 +36,44 @@ const mappings = {
                 body: {
                   "value": 2971215073,
                   "step": 47,
-                  "number": "47"
+                  "number": 47
                 }
               },
               checker: function(output, response, request) {
                 assert.deepEqual(output.body, {
                   "value": 2971215073,
                   "step": 47,
-                  "number": "47"
+                  "number": 47
                 });
               }
             }
-          }
+          },
+          InvalidInputNumber: {
+            request: {
+              method: "GET",
+              params: { apiVersion: "v1", number: "abc" },
+              headers: {
+                "Content-Type": "application/json",
+                "X-Request-Id": "54983DAF-1CF7-4599-975A-9F91049F9708",
+                "X-Environment": "dev",
+              },
+            },
+            response: {
+              contains: {
+                statusCode: 400,
+                statusText: "Bad Request",
+                headers: {
+                  "content-type": "application/json",
+                  "x-request-id": "54983DAF-1CF7-4599-975A-9F91049F9708",
+                  "x-return-code": "1009",
+                },
+                body: {
+                  name: 'InvalidInputNumber',
+                  message: 'Invalid input number'
+                }
+              },
+            }
+          },
         };
         //
         this.getNames = function() {
@@ -55,7 +81,7 @@ const mappings = {
         };
         //
         this.getScenario = function(name) {
-          return lodash.get(scenarios, name, scenarios.default);
+          return lodash.get(scenarios, name);
         };
       }),
     }

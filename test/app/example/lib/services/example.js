@@ -3,6 +3,7 @@
 const FRWK = require("@saola/core");
 const Promise = FRWK.require("bluebird");
 const chores = FRWK.require("chores");
+const lodash = FRWK.require("lodash");
 const Fibonacci = require("../utils/fibonacci");
 
 const Service = function(params = {}) {
@@ -20,6 +21,8 @@ const Service = function(params = {}) {
     errorCodes: sandboxConfig.otherErrorSource
   });
 
+  const errorBuilder = errorManager.getErrorBuilder(packageName);
+
   this.fibonacci = function(data, opts) {
     opts = opts || {};
     const reqTr = T.branch({ key: "requestId", value: opts.requestId || T.getLogID() });
@@ -27,11 +30,12 @@ const Service = function(params = {}) {
       tags: [ blockRef, "fibonacci" ],
       text: " - fibonacci[${requestId}] is invoked with parameters: ${data}"
     }));
-    if (!data.number || data.number < 0 || data.number > 50) {
-      return Promise.reject({
+    data.number = parseInt(data.number);
+    if (lodash.isNaN(data.number) || data.number < 0 || data.number > 50) {
+      return Promise.reject(errorBuilder.newError("InvalidInputNumber", {
         input: data,
         message: "invalid input number"
-      });
+      }));
     }
     const fibonacci = new Fibonacci(data);
     const result = fibonacci.finish();
